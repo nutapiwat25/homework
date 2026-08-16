@@ -65,18 +65,36 @@
             ><strong id="groupNameSide">กำลังโหลด...</strong></span
           ><b>⌄</b>
         </button>
-        <nav class="nav">
-          <button class="nav-item active" data-view="board">
-            <span class="nav-icon">⌂</span>ภาพรวม</button
-          ><button class="nav-item" data-view="tasks">
-            <span class="nav-icon">☑</span>งานทั้งหมด
-            <span class="nav-count" id="sidebarTaskCount">0</span></button
-          ><button class="nav-item" data-view="calendar">
-            <span class="nav-icon">▦</span>ปฏิทิน</button
-          ><button class="nav-item" data-view="activity">
-            <span class="nav-icon">◌</span>กิจกรรม
+        <!-- แถบ Navigation ด้านข้าง -->
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-view="dashboard">
+            <span class="nav-icon">📊</span>ภาพรวมกลุ่ม (Dashboard)
+          </button>
+          <button class="nav-item" data-view="tasks">
+            <span class="nav-icon">☑</span>งานส่วนตัวของฉัน (My Tasks)
+            <span class="nav-count" id="sidebarTaskCount">0</span>
           </button>
         </nav>
+
+        <!-- View 1: ภาพรวมกลุ่ม (Dashboard) -->
+        <section id="viewDashboard" class="view-section">
+          <h2>ภาพรวมการบ้านกลุ่ม</h2>
+          <div id="dashboardTaskList" class="dashboard-grid">
+            <!-- รายการงานกลุ่มพร้อมสถานะความคืบหน้าของสมาชิกจะแสดงที่นี่ -->
+          </div>
+        </section>
+
+        <!-- View 2: งานส่วนตัว (My Tasks) -->
+        <section id="viewTasks" class="view-section" style="display:none;">
+          <h2>งานส่วนตัวของฉัน</h2>
+          <div class="filter-tabs">
+            <button class="tab-btn active" data-filter="mine">ต้องทำ</button>
+            <button class="tab-btn" data-filter="done">เสร็จแล้ว</button>
+          </div>
+          <div id="taskList" class="task-list">
+            <!-- รายการเช็คลิสต์ส่วนตัวจะแสดงที่นี่ -->
+          </div>
+        </section>
         <div class="sidebar-footer">
           <div class="member-preview">
             <small>สมาชิกในกลุ่ม</small>

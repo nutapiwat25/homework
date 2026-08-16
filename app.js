@@ -217,7 +217,10 @@ async function ensureInvite(data) {
       });
     }
   } catch (error) {
-    console.warn("Invite setup requires the latest Firestore rules.", error.code);
+    console.warn(
+      "Invite setup requires the latest Firestore rules.",
+      error.code,
+    );
   }
 }
 function subscribeTasks() {
@@ -227,7 +230,7 @@ function subscribeTasks() {
     (snap) => {
       tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
-    }
+    },
   );
   // เรียกฟังกิจกรรมกลุ่มพร้อมกัน
   subscribeActivities();
@@ -251,7 +254,7 @@ function subscribeActivities() {
   const q = query(
     collection(db, "groups", group.id, "activities"),
     orderBy("createdAt", "desc"),
-    limit(5)
+    limit(5),
   );
 
   stopActivities = onSnapshot(q, (snap) => {
@@ -271,7 +274,9 @@ function renderActivity(activities = []) {
   if (!activities || !activities.length) {
     // Fallback กรณีไม่มีข้อมูลในกิจกรรม
     const items = [...(tasks || [])]
-      .sort((a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0))
+      .sort(
+        (a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0),
+      )
       .slice(0, 4);
 
     $("#activityList").innerHTML =
@@ -403,11 +408,21 @@ function renderDue() {
 function renderCalendar() {
   const year = currCalDate.getFullYear();
   const month = currCalDate.getMonth();
-  
+
   // แสดงหัวข้อเดือน/ปี ภาษาไทย
   const monthNames = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
   ];
   $("#calendarMonthYear").textContent = `${monthNames[month]} ${year + 543}`;
 
@@ -433,11 +448,17 @@ function renderCalendar() {
     let dotsHtml = "";
     if (dayTasks.length > 0) {
       const hasDone = dayTasks.some((t) => t.status === "done");
-      const hasUrgent = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) <= 3);
-      const hasNormal = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) > 3);
+      const hasUrgent = dayTasks.some(
+        (t) => t.status !== "done" && daysAway(t.due) <= 3,
+      );
+      const hasNormal = dayTasks.some(
+        (t) => t.status !== "done" && daysAway(t.due) > 3,
+      );
 
-      if (hasUrgent) dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
-      if (hasNormal) dotsHtml += `<i class="dot lilac" title="มีงานส่งวันนี้"></i>`;
+      if (hasUrgent)
+        dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
+      if (hasNormal)
+        dotsHtml += `<i class="dot lilac" title="มีงานส่งวันนี้"></i>`;
       if (hasDone) dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
     }
 
@@ -464,7 +485,8 @@ function renderCalendarTasks() {
   let list = [];
   if (selectedCalDate) {
     list = tasks.filter((t) => t.due === selectedCalDate);
-    $("#selectedDateTitle").textContent = `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
+    $("#selectedDateTitle").textContent =
+      `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
     $("#selectedDateSub").textContent = `พบ ${list.length} รายการ`;
   } else {
     // แสดงงานทั้งหมดในเดือนปัจจุบันที่เลือกอยู่
@@ -492,7 +514,7 @@ function renderCalendarTasks() {
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
               </div>
-            </article>`
+            </article>`,
         )
         .join("")
     : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
@@ -540,7 +562,7 @@ async function showDetail(id) {
   `;
 
   $("#detailDone").onclick = () => toggleDone(t.id);
-  
+
   // โหลดความคิดเห็นแบบ Realtime
   subscribeComments(t.id);
   open("detailModal");
@@ -549,7 +571,7 @@ function subscribeComments(taskId) {
   if (stopComments) stopComments();
   const q = query(
     collection(db, "groups", group.id, "tasks", taskId, "comments"),
-    orderBy("createdAt", "asc")
+    orderBy("createdAt", "asc"),
   );
   stopComments = onSnapshot(q, (snap) => {
     const comments = snap.docs.map((d) => d.data());
@@ -557,7 +579,7 @@ function subscribeComments(taskId) {
       ? comments
           .map(
             (c) =>
-              `<div class="comment"><span>${initials(c.authorName)}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`
+              `<div class="comment"><span>${initials(c.authorName)}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`,
           )
           .join("")
       : '<p class="tiny-empty">ยังไม่มีความคิดเห็น</p>';
@@ -581,6 +603,168 @@ async function toggleDone(id) {
   toast(isDoneNow ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
   if (selectedTask?.id === id) close("detailModal");
 }
+// ==========================================
+// 1. ฟังก์ชันเช็คงานเสร็จ/ยังไม่เสร็จ แบบรายบุคคล
+// ==========================================
+async function togglePersonalDone(taskId, taskTitle) {
+  if (!group || !user) return;
+
+  // อ้างอิง Subcollection รายบุคคล: groups/{groupId}/tasks/{taskId}/completedUsers/{userId}
+  const userDoneRef = doc(
+    db,
+    "groups",
+    group.id,
+    "tasks",
+    taskId,
+    "completedUsers",
+    user.uid,
+  );
+  const userDoneSnap = await getDoc(userDoneRef);
+
+  try {
+    if (userDoneSnap.exists()) {
+      // ยกเลิกสถานะทำเสร็จ
+      await deleteDoc(userDoneRef);
+      await logActivity("ย้ายงานกลับไปที่ต้องทำ", taskTitle);
+      toast("ย้ายงานกลับไปที่รายการต้องทำแล้ว");
+    } else {
+      // บันทึกสถานะทำเสร็จ
+      await setDoc(userDoneRef, {
+        completedAt: serverTimestamp(),
+        userName: nameOf(),
+      });
+      await logActivity("ทำส่วนตัวเสร็จแล้ว", taskTitle);
+      toast("เก่งมาก! บันทึกงานเสร็จเรียบร้อย");
+    }
+    // โหลดข้อมูลใหม่เพื่ออัปเดตหน้าจอ
+    await fetchAndRenderTasks();
+  } catch (err) {
+    console.error("Error toggling task status:", err);
+    toast("เกิดข้อผิดพลาดในการบันทึกสถานะ");
+  }
+}
+
+// ==========================================
+// 2. ดึงข้อมูลงานทั้งหมดพร้อมสถานะรายบุคคล
+// ==========================================
+async function fetchAndRenderTasks() {
+  if (!group) return;
+
+  const tasksSnap = await getDocs(collection(db, "groups", group.id, "tasks"));
+  const tasks = [];
+
+  for (const taskDoc of tasksSnap.docs) {
+    const taskData = taskDoc.data();
+
+    // ดึงข้อมูลว่ามีสมาชิกคนไหนทำเสร็จแล้วบ้าง
+    const completedSnap = await getDocs(
+      collection(db, "groups", group.id, "tasks", taskDoc.id, "completedUsers"),
+    );
+    const completedUsers = completedSnap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+
+    // ตรวจสอบว่าผู้ใช้ปัจจุบันทำเสร็จหรือยัง
+    const isDoneByMe = completedUsers.some((u) => u.id === user.uid);
+
+    tasks.push({
+      id: taskDoc.id,
+      ...taskData,
+      completedUsers,
+      isDoneByMe,
+    });
+  }
+
+  renderDashboardTasks(tasks);
+  renderPersonalTasks(tasks);
+}
+
+// ==========================================
+// 3. แสดงผลหน้า Dashboard (ภาพรวมกลุ่ม)
+// ==========================================
+function renderDashboardTasks(tasks) {
+  const container = $("#dashboardTaskList");
+  if (!container) return;
+
+  const totalMembers = Object.keys(group.data().members || {}).length;
+
+  container.innerHTML = tasks
+    .map((t) => {
+      const count = t.completedUsers.length;
+      return `
+      <div class="dash-task-card">
+        <div class="dash-task-header">
+          <span class="subject-pill">${esc(t.subject)}</span> 
+          <span class="due-date">◷ ${due(t)}</span> 
+        </div>
+        <h4>${esc(t.title)}</h4> 
+        
+        <!-- Progress Bar สรุปความคืบหน้าของกลุ่ม -->
+        <div class="group-progress">
+          <div class="progress-info">
+            <small>ทำเสร็จแล้ว ${count}/${totalMembers} คน</small>
+          </div>
+          <div class="avatar-group">
+            ${t.completedUsers
+              .map(
+                (u) => `
+              <span class="avatar-chip" title="${esc(u.userName)}">${esc(initials(u.userName))}</span> 
+            `,
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
+// ==========================================
+// 4. แสดงผลหน้า My Tasks (เช็คลิสต์ส่วนตัว)
+// ==========================================
+function renderPersonalTasks(tasks) {
+  const container = $("#taskList");
+  if (!container) return;
+
+  // กรองงานตาม Filter (ยังไม่ทำ / ทำเสร็จแล้ว)
+  const filtered = tasks.filter((t) => {
+    if (activeFilter === "mine") return !t.isDoneByMe;
+    if (activeFilter === "done") return t.isDoneByMe;
+    return true;
+  });
+
+  container.innerHTML = filtered
+    .map(
+      (t) => `
+    <article class="task-item ${t.isDoneByMe ? "done" : ""}" data-id="${t.id}">
+      <button class="check-button ${t.isDoneByMe ? "checked" : ""}" data-action="personal-done">
+        ${t.isDoneByMe ? "✓" : ""}
+      </button>
+      <div class="task-info">
+        <span class="task-title">${esc(t.title)}</span> 
+        <span class="task-meta">
+          <span class="subject-pill">${esc(t.subject)}</span> 
+          <span class="due-date">◷ ${due(t)}</span> 
+        </span>
+      </div>
+    </article>
+  `,
+    )
+    .join("");
+}
+
+// Event Delegation สำหรับปุ่มติ๊กเช็คส่วนตัว
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest('[data-action="personal-done"]');
+  if (btn) {
+    const taskItem = btn.closest(".task-item");
+    const taskId = taskItem.dataset.id;
+    const taskTitle = taskItem.querySelector(".task-title").textContent;
+    togglePersonalDone(taskId, taskTitle);
+  }
+});
 $("#taskForm").onsubmit = async (e) => {
   e.preventDefault();
   const submitBtn = e.target.querySelector('button[type="submit"]');
@@ -598,7 +782,9 @@ $("#taskForm").onsubmit = async (e) => {
     const data = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
-      section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
+      section: $("#taskSection")
+        ? $("#taskSection").value.trim()
+        : "section650001",
       due: $("#taskDue").value,
       priority: $("#taskPriority").value,
       link: $("#taskLink") ? $("#taskLink").value.trim() : "",
@@ -628,7 +814,9 @@ $("#taskForm").onsubmit = async (e) => {
     toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
   } catch (err) {
     console.error("Task Form Error:", err);
-    alert("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"));
+    alert(
+      "เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"),
+    );
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "บันทึกงาน";
@@ -647,7 +835,7 @@ $("#commentForm").onsubmit = async (e) => {
       authorId: user.uid,
       authorName: nameOf(),
       createdAt: serverTimestamp(),
-    }
+    },
   );
 
   await logActivity("แสดงความคิดเห็นใน", selectedTask.title);

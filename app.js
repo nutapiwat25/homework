@@ -60,6 +60,7 @@ let user,
   toastTimer,
   currCalDate = new Date(),
   selectedCalDate = null,
+  stopActivities,
   registerMode = false;
 const today = () => new Date().toISOString().slice(0, 10);
 const nameOf = () =>
@@ -226,8 +227,78 @@ function subscribeTasks() {
     (snap) => {
       tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
-    },
+    }
   );
+  // เรียกฟังกิจกรรมกลุ่มพร้อมกัน
+  subscribeActivities();
+}
+async function logActivity(action, taskTitle) {
+  if (!group || !group.id || !user) return;
+  try {
+    await addDoc(collection(db, "groups", group.id, "activities"), {
+      userName: nameOf(),
+      userId: user.uid,
+      action: action, // "สร้างงานใหม่", "ทำเสร็จแล้ว", "แก้ไขงาน", "แสดงความคิดเห็น"
+      taskTitle: taskTitle,
+      createdAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.warn("ไม่สามารถบันทึกกิจกรรมได้:", err);
+  }
+}
+function subscribeActivities() {
+  if (stopActivities) stopActivities();
+  const q = query(
+    collection(db, "groups", group.id, "activities"),
+    orderBy("createdAt", "desc"),
+    limit(5)
+  );
+
+  stopActivities = onSnapshot(q, (snap) => {
+    const activities = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderActivity(activities);
+  });
+}
+function timeAgo(timestamp) {
+  if (!timestamp || !timestamp.toDate) return "เมื่อซักครู่";
+  const diffSec = Math.floor((new Date() - timestamp.toDate()) / 1000);
+  if (diffSec < 60) return "เมื่อซักครู่";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)} นาทีที่แล้ว`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ชม. ที่แล้ว`;
+  return fmt(timestamp.toDate().toISOString().slice(0, 10));
+}
+function renderActivity(activities = []) {
+  if (!activities.length) {
+    // Fallback หากยังไม่มีข้อมูลใน activities collection
+    const items = [...tasks]
+      .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
+      .slice(0, 4);
+
+    $("#activityList").innerHTML =
+      items
+        .map(
+          (t) =>
+            `<div class="activity-row">
+              <span>${initials(t.updatedByName || t.createdByName)}</span>
+              <p><b>${esc(t.updatedByName || t.createdByName || "สมาชิก")}</b> ${t.status === "done" ? "ทำเสร็จแล้ว" : "อัปเดตงาน"}<br><small>${esc(t.title)}</small></p>
+            </div>`
+        )
+        .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
+    return;
+  }
+
+  $("#activityList").innerHTML = activities
+    .map(
+      (a) =>
+        `<div class="activity-row">
+          <span>${initials(a.userName)}</span>
+          <p>
+            <b>${esc(a.userName)}</b> ${esc(a.action)}<br>
+            <small>${esc(a.taskTitle)} · ${timeAgo(a.createdAt)}</small>
+          </p>
+        </div>`
+    )
+    .join("");
 }
 function render() {
   const done = tasks.filter((t) => t.status === "done").length,
@@ -444,49 +515,70 @@ async function showDetail(id) {
       <span class="subject-pill subject-ba">${esc(t.section || "section650001")}</span>
       <h2>${esc(t.title)}</h2>
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
-      
       ${linkHtml}
-
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
       <button id="detailDone" class="secondary-button">${t.status === "done" ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button>
     </div>
   `;
 
   $("#detailDone").onclick = () => toggleDone(t.id);
+  
+  // โหลดความคิดเห็นแบบ Realtime
+  subscribeComments(t.id);
   open("detailModal");
+}
+function subscribeComments(taskId) {
+  if (stopComments) stopComments();
+  const q = query(
+    collection(db, "groups", group.id, "tasks", taskId, "comments"),
+    orderBy("createdAt", "asc")
+  );
+  stopComments = onSnapshot(q, (snap) => {
+    const comments = snap.docs.map((d) => d.data());
+    $("#commentList").innerHTML = comments.length
+      ? comments
+          .map(
+            (c) =>
+              `<div class="comment"><span>${initials(c.authorName)}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`
+          )
+          .join("")
+      : '<p class="tiny-empty">ยังไม่มีความคิดเห็น</p>';
+  });
 }
 async function toggleDone(id) {
   const t = tasks.find((x) => x.id === id);
+  if (!t) return;
+
+  const isDoneNow = t.status !== "done";
+  const actionText = isDoneNow ? "ทำเสร็จแล้ว" : "เปิดงานอีกครั้ง";
+
   await updateDoc(doc(db, "groups", group.id, "tasks", id), {
-    status: t.status === "done" ? "todo" : "done",
+    status: isDoneNow ? "done" : "todo",
     updatedAt: serverTimestamp(),
     updatedByName: nameOf(),
   });
-  toast(
-    t.status === "done"
-      ? "ย้ายงานกลับไปที่ต้องทำแล้ว"
-      : "เก่งมาก! งานเสร็จแล้ว",
-  );
+
+  await logActivity(actionText, t.title);
+
+  toast(isDoneNow ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
   if (selectedTask?.id === id) close("detailModal");
 }
 $("#taskForm").onsubmit = async (e) => {
   e.preventDefault();
-  
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.textContent = "กำลังบันทึก...";
 
   try {
-    if (!group || !group.id) {
-      throw new Error("ไม่พบข้อมูลกลุ่ม กรุณาลองรีเฟรชหน้าเว็บแล้วเข้าสู่ระบบใหม่");
-    }
+    if (!group || !group.id) throw new Error("ไม่พบข้อมูลกลุ่ม");
 
     const id = $("#taskId").value,
       assignee = $("#taskAssignee").value,
       members = (group.data && group.data().members) || {};
 
+    const taskTitle = $("#taskTitle").value.trim();
     const data = {
-      title: $("#taskTitle").value.trim(),
+      title: taskTitle,
       subject: $("#taskSubject").value.trim(),
       section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
       due: $("#taskDue").value,
@@ -501,6 +593,7 @@ $("#taskForm").onsubmit = async (e) => {
 
     if (id) {
       await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
+      await logActivity("แก้ไขงาน", taskTitle);
     } else {
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...data,
@@ -509,12 +602,12 @@ $("#taskForm").onsubmit = async (e) => {
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
       });
+      await logActivity("สร้างงานใหม่", taskTitle);
     }
 
     close("taskModal");
     $("#taskForm").reset();
     toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
-
   } catch (err) {
     console.error("Task Form Error:", err);
     alert("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"));
@@ -528,6 +621,7 @@ $("#commentForm").onsubmit = async (e) => {
   if (!selectedTask) return;
   const text = $("#commentInput").value.trim();
   if (!text) return;
+
   await addDoc(
     collection(db, "groups", group.id, "tasks", selectedTask.id, "comments"),
     {
@@ -535,8 +629,10 @@ $("#commentForm").onsubmit = async (e) => {
       authorId: user.uid,
       authorName: nameOf(),
       createdAt: serverTimestamp(),
-    },
+    }
   );
+
+  await logActivity("แสดงความคิดเห็นใน", selectedTask.title);
   $("#commentInput").value = "";
 };
 $("#taskList").onclick = (e) => {

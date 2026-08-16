@@ -84,20 +84,6 @@ const fmt = (date) =>
     day: "numeric",
     month: "short",
   });
-const data = {
-  title: taskTitle,
-  subject: $("#taskSubject").value.trim(),
-  section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
-  due: $("#taskDue").value,
-  priority: $("#taskPriority").value,
-  link: $("#taskLink") ? $("#taskLink").value.trim() : "",
-  note: $("#taskNote").value.trim(),
-  assigneeId: assignee || "",
-  assigneeName: members[assignee] || "",
-  updatedAt: serverTimestamp(),
-  updatedBy: user.uid,
-  updatedByName: nameOf(),
-};
 function toast(text) {
   $("#toastText").textContent = text;
   $("#toast").classList.add("show");
@@ -709,6 +695,7 @@ $("#taskForm").onsubmit = async (e) => {
       members = (group.data && group.data().members) || {};
 
     const taskTitle = $("#taskTitle").value.trim();
+    // บันทึกผู้สร้าง/แก้ไขงานใน taskForm
     const data = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
@@ -720,6 +707,7 @@ $("#taskForm").onsubmit = async (e) => {
       assigneeId: assignee || "",
       assigneeName: members[assignee] || "",
       updatedAt: serverTimestamp(),
+      updatedBy: user.uid,
       updatedByName: nameOf(),
     };
 

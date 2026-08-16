@@ -269,39 +269,57 @@ function timeAgo(timestamp) {
 }
 function renderActivity(activities = []) {
   if (!activities || !activities.length) {
-    // Fallback หากยังไม่มีข้อมูลใน activities collection
+    // Fallback กรณีไม่มีข้อมูลในกิจกรรม
     const items = [...(tasks || [])]
       .sort((a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0))
       .slice(0, 4);
 
     $("#activityList").innerHTML =
       items
-        .map(
-          (t) => {
-            const author = t.updatedByName || t.createdByName || "สมาชิก";
-            return `<div class="activity-row">
-              <span>${initials(author)}</span>
-              <p><b>${esc(author)}</b> ${t.status === "done" ? "ทำเสร็จแล้ว" : "อัปเดตงาน"}<br><small>${esc(t.title || "")}</small></p>
-            </div>`;
-          }
-        )
+        .map((t) => {
+          const author = t.updatedByName || t.createdByName || "สมาชิก";
+          const isDone = t.status === "done";
+          const actionLabel = isDone ? "ทำเสร็จแล้ว" : "อัปเดตงาน";
+          const actionClass = isDone ? "act-done" : "act-update";
+          const timeText = timeAgo(t.updatedAt);
+
+          return `<div class="activity-row">
+            <span class="avatar-sm">${initials(author)}</span>
+            <div class="activity-content">
+              <div class="activity-header">
+                <b>${esc(author)}</b>
+                <span class="act-badge ${actionClass}">${actionLabel}</span>
+              </div>
+              <p class="activity-title">${esc(t.title || "")}</p>
+              <small class="activity-time">◷ ${timeText}</small>
+            </div>
+          </div>`;
+        })
         .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
     return;
   }
 
   $("#activityList").innerHTML = activities
-    .map(
-      (a) => {
-        const author = a.userName || "สมาชิก";
-        return `<div class="activity-row">
-          <span>${initials(author)}</span>
-          <p>
-            <b>${esc(author)}</b> ${esc(a.action || "")}<br>
-            <small>${esc(a.taskTitle || "")} · ${timeAgo(a.createdAt)}</small>
-          </p>
-        </div>`;
-      }
-    )
+    .map((a) => {
+      const author = a.userName || "สมาชิก";
+      const action = a.action || "อัปเดตงาน";
+      let actionClass = "act-update";
+      if (action.includes("เสร็จ")) actionClass = "act-done";
+      if (action.includes("สร้าง")) actionClass = "act-create";
+      if (action.includes("ความเห็น")) actionClass = "act-comment";
+
+      return `<div class="activity-row">
+        <span class="avatar-sm">${initials(author)}</span>
+        <div class="activity-content">
+          <div class="activity-header">
+            <b>${esc(author)}</b>
+            <span class="act-badge ${actionClass}">${esc(action)}</span>
+          </div>
+          <p class="activity-title">${esc(a.taskTitle || "")}</p>
+          <small class="activity-time">◷ ${timeAgo(a.createdAt)}</small>
+        </div>
+      </div>`;
+    })
     .join("");
 }
 function render() {
@@ -370,7 +388,15 @@ function renderDue() {
       .slice(0, 4)
       .map(
         (t) =>
-          `<button class="due-row" data-task="${t.id}"><b>${esc(t.title)}</b><span>${esc(t.subject)} · ${due(t)}</span></button>`,
+          `<button class="due-row" data-task="${t.id}">
+            <div class="due-row-main">
+              <b class="due-row-title">${esc(t.title)}</b>
+              <div class="due-row-meta">
+                <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+                <span class="due-tag">◷ ${due(t)}</span>
+              </div>
+            </div>
+          </button>`,
       )
       .join("") || '<p class="tiny-empty">ยังไม่มีงานค้าง</p>';
 }

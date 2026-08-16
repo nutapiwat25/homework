@@ -470,8 +470,10 @@ function renderTasks() {
           }
 
           if (currentView === "board") {
-            // หน้าภาพรวมกลุ่ม: ไม่มีปุ่มติ๊ก แสดงข้อความคนทำเสร็จแล้วใต้งาน
-            return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
+            // 📊 หน้าภาพรวมกลุ่ม: แสดงสถานะรวมของงาน (ไอคอนแสดงสถานะ + ข้อความคนทำเสร็จใต้งาน)
+            const isGroupDone = t.status === "done";
+            return `<article class="task-item ${isGroupDone ? "done" : ""}" data-id="${t.id}">
+              <div class="check-status-icon">${isGroupDone ? "✓" : ""}</div>
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
@@ -487,7 +489,7 @@ function renderTasks() {
               </div>
             </article>`;
           } else {
-            // หน้างานของฉัน: มีปุ่มติ๊กงาน
+            // ☑ หน้างานของฉัน: มีปุ่มให้คลิกติ๊กส่งงาน/ยกเลิกงานเฉพาะของตนเอง
             return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
               <button class="task-open" data-action="detail">

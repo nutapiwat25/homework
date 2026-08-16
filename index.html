@@ -61,21 +61,60 @@
           <b>⌄</b>
         </button>
 
-        <nav class="sidebar-nav">
-          <button class="nav-item active" data-view="board">
-            <span class="nav-icon">📊</span>ภาพรวมกลุ่ม
+        <!-- ปรับเปลี่ยน Navigation Bar / Tab Menu -->
+        <nav class="nav-tabs">
+          <button class="nav-btn active" data-view="overview">
+            <span>📊</span> ภาพรวมงาน
           </button>
-          <button class="nav-item" data-view="tasks">
-            <span class="nav-icon">☑</span>งานของฉัน
-            <span class="nav-count" id="sidebarTaskCount">0</span>
+          <button class="nav-btn" data-view="board">
+            <span>📋</span> บอร์ดงาน
           </button>
-          <button class="nav-item" data-view="calendar">
-            <span class="nav-icon">📅</span>ปฏิทิน
-          </button>
-          <button class="nav-item" data-view="activity">
-            <span class="nav-icon">⚡</span>กิจกรรม
+          <button class="nav-btn" data-view="calendar">
+            <span>📅</span> ปฏิทิน
           </button>
         </nav>
+
+        <!-- ในส่วน Main Content -->
+        <main class="app-content">
+          <!-- View: ภาพรวมงาน (Overview View) -->
+          <section id="viewOverview" class="view-section active">
+            <!-- การ์ดสรุปตัวเลขสถิติภาพรวม -->
+            <div class="overview-stats">
+              <div class="stat-card">
+                <span class="stat-label">งานทั้งหมด</span>
+                <span class="stat-value" id="statTotal">0</span>
+              </div>
+              <div class="stat-card pending">
+                <span class="stat-label">กำลังดำเนินการ</span>
+                <span class="stat-value" id="statPending">0</span>
+              </div>
+              <div class="stat-card done">
+                <span class="stat-label">เสร็จสิ้นแล้ว</span>
+                <span class="stat-value" id="statDone">0</span>
+              </div>
+            </div>
+
+            <!-- หัวข้อและตัวกรอง -->
+            <div class="section-header">
+              <h2>รายการงานทั้งหมดในระบบ</h2>
+              <div class="filter-controls">
+                <select id="overviewSubjectFilter">
+                  <option value="all">ทุกวิชา/หมวดหมู่</option>
+                </select>
+                <select id="overviewStatusFilter">
+                  <option value="all">ทุกสถานะ</option>
+                  <option value="pending">ยังไม่เสร็จ</option>
+                  <option value="done">เสร็จแล้ว</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- รายการงานทั้งหมด -->
+            <div id="overviewTaskList" class="task-list"></div>
+          </section>
+
+          <!-- View: บอร์ดงาน (Board View) และ ปฏิทิน (Calendar) ให้คงไว้ตามเดิม -->
+        </main>
 
         <div class="sidebar-footer">
           <div class="member-preview">

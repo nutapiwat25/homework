@@ -68,7 +68,8 @@ let user,
   toastTimer,
   currCalDate = new Date(),
   selectedCalDate = null,
-  registerMode = false;
+  registerMode = false,
+  currentView = "overview";
 
 const today = () => new Date().toISOString().slice(0, 10);
 const nameOf = () =>
@@ -100,21 +101,26 @@ function close(id) {
   $(`#${id}`).classList.remove("open");
 }
 
-document.querySelectorAll(".auth-tab").forEach(
-  (b) =>
-    (b.onclick = () => {
-      registerMode = b.dataset.auth === "signup";
-      document
-        .querySelectorAll(".auth-tab")
-        .forEach((x) => x.classList.toggle("active", x === b));
-      $(".name-field").classList.toggle("hidden", !registerMode);
-      $("#displayName").required = registerMode;
-      $("#authSubmit").textContent = registerMode
-        ? "สร้างบัญชีและเริ่มกลุ่ม"
-        : "เข้าสู่ระบบ";
-      $("#authError").textContent = "";
-    }),
-);
+document.querySelectorAll(".nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+    document.querySelectorAll(".view-section").forEach((s) => s.classList.remove("active"));
+
+    btn.classList.add("active");
+    currentView = btn.dataset.view;
+
+    if (currentView === "overview") {
+      $("#viewOverview").classList.add("active");
+      renderOverview();
+    } else if (currentView === "board") {
+      $("#viewBoard").classList.add("active");
+      renderBoard();
+    } else if (currentView === "calendar") {
+      $("#viewCalendar").classList.add("active");
+      renderCalendar();
+    }
+  });
+});
 
 $("#authForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -605,6 +611,69 @@ function renderCalendarTasks() {
     : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
 }
 
+function renderOverview() {
+  if (!tasks) return;
+
+  // คำนวณสถิติภาพรวม
+  const total = tasks.length;
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+  const pendingCount = total - doneCount;
+
+  // อัปเดตตัวเลขใน Stat Cards
+  $("#statTotal").textContent = total;
+  $("#statPending").textContent = pendingCount;
+  $("#statDone").textContent = doneCount;
+
+  // ดึงค่าตัวกรอง (Filter)
+  const subjectFilter = $("#overviewSubjectFilter") ? $("#overviewSubjectFilter").value : "all";
+  const statusFilter = $("#overviewStatusFilter") ? $("#overviewStatusFilter").value : "all";
+
+  // กรองรายการงานทั้งหมด
+  let filteredTasks = tasks.filter((t) => {
+    const matchSubject = subjectFilter === "all" || t.subject === subjectFilter;
+    const matchStatus =
+      statusFilter === "all" ||
+      (statusFilter === "done" && t.status === "done") ||
+      (statusFilter === "pending" && t.status !== "done");
+    return matchSubject && matchStatus;
+  });
+
+  // Render รายการงานในภาพรวม
+  const container = $("#overviewTaskList");
+  if (!filteredTasks.length) {
+    container.innerHTML = '<div class="empty-list"><span>☁</span>ไม่มีงานในระบบขณะนี้</div>';
+    return;
+  }
+
+  container.innerHTML = filteredTasks
+    .map((t) => {
+      const isDone = t.status === "done";
+      const completedNames = t.completedByNames || [];
+      let doneInfo = completedNames.length
+        ? `<div class="completed-by-text">✓ ส่งแล้ว: ${completedNames.map((n) => esc(n)).join(", ")}</div>`
+        : `<div class="completed-by-text pending">○ ยังไม่มีคนส่งงาน</div>`;
+
+      return `
+        <article class="task-item ${isDone ? "done" : ""}" data-id="${t.id}">
+          <button class="check-button" data-action="done">${isDone ? "✓" : ""}</button>
+          <div class="task-open" data-action="detail">
+            <span class="task-title">${esc(t.title)}</span>
+            <span class="task-meta">
+              <span class="subject-pill">${esc(t.subject || "ทั่วไป")}</span>
+              <span class="assignee">👤 ${esc(t.assigneeName || "ไม่ระบุผู้รับผิดชอบ")}</span>
+              <span class="due-date">◷ ${due(t)}</span>
+            </span>
+            ${doneInfo}
+          </div>
+          <div class="task-actions">
+            <span class="priority-dot ${t.priority}"></span>
+            <button class="edit-task" data-action="edit">✎</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
 function openTask(id) {
   const t = id ? tasks.find((x) => x.id === id) : null;
   $("#taskForm").reset();
@@ -946,3 +1015,5 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
 };
+$("#overviewSubjectFilter")?.addEventListener("change", renderOverview);
+$("#overviewStatusFilter")?.addEventListener("change", renderOverview);

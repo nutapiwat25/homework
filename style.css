@@ -1511,3 +1511,64 @@ body.dark .cal-day-cell.today {
 body.dark .completed-by-text span {
   color: #dfddec;
 }
+/* การ์ดสถิติภาพรวม */
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stat-card.pending .stat-value {
+  color: #f59e0b;
+}
+
+.stat-card.done .stat-value {
+  color: #10b981;
+}
+
+/* ส่วนหัวและ Filter */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-controls select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  font-size: 0.9rem;
+}

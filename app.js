@@ -84,6 +84,7 @@ const fmt = (date) =>
     day: "numeric",
     month: "short",
   });
+
 function toast(text) {
   $("#toastText").textContent = text;
   $("#toast").classList.add("show");
@@ -255,9 +256,9 @@ async function logActivity(action, taskTitle) {
   try {
     await addDoc(collection(db, "groups", group.id, "activities"), {
       userName: nameOf(),
-      userId: user.uid, // ระบุ UID ของผู้ทำรายการอย่างชัดเจน
+      userId: user.uid,
       action: action,
-      taskTitle: taskTitle || "",
+      taskTitle: taskTitle,
       createdAt: serverTimestamp(),
     });
   } catch (err) {
@@ -294,21 +295,46 @@ function renderActivity(activities = currentActivities) {
 
   let html = "";
   if (!activities || !activities.length) {
-    html = '<p class="tiny-empty">ยังไม่มีประวัติกิจกรรมในกลุ่ม</p>';
+    const items = [...(tasks || [])]
+      .sort(
+        (a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0),
+      )
+      .slice(0, 5);
+
+    html =
+      items
+        .map((t) => {
+          const author = t.updatedByName || t.createdByName || "สมาชิก";
+          const isDone = t.status === "done";
+          const actionLabel = isDone ? "ทำเสร็จแล้ว" : "อัปเดตงาน";
+          const actionClass = isDone ? "act-done" : "act-update";
+          const timeText = timeAgo(t.updatedAt);
+
+          return `<div class="activity-row">
+            <span class="avatar-sm">${initials(author)}</span>
+            <div class="activity-content">
+              <div class="activity-header">
+                <b>${esc(author)}</b>
+                <span class="act-badge ${actionClass}">${actionLabel}</span>
+              </div>
+              <p class="activity-title">${esc(t.title || "")}</p>
+              <small class="activity-time">◷ ${timeText}</small>
+            </div>
+          </div>`;
+        })
+        .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
   } else {
     html = activities
       .map((a) => {
-        const isMe = a.userId === user?.uid;
-        const author = a.userName ? `${a.userName}${isMe ? " (คุณ)" : ""}` : "สมาชิก";
+        const author = a.userName || "สมาชิก";
         const action = a.action || "อัปเดตงาน";
-        
         let actionClass = "act-update";
         if (action.includes("เสร็จ")) actionClass = "act-done";
         if (action.includes("สร้าง")) actionClass = "act-create";
         if (action.includes("ความเห็น")) actionClass = "act-comment";
 
-        return `<div class="activity-row ${isMe ? "is-me" : ""}">
-          <span class="avatar-sm">${initials(a.userName)}</span>
+        return `<div class="activity-row">
+          <span class="avatar-sm">${initials(author)}</span>
           <div class="activity-content">
             <div class="activity-header">
               <b>${esc(author)}</b>
@@ -444,10 +470,8 @@ function renderTasks() {
           }
 
           if (currentView === "board") {
-            // 📊 หน้าภาพรวมกลุ่ม: แสดงสถานะรวมของงาน (ไอคอนแสดงสถานะ + ข้อความคนทำเสร็จใต้งาน)
-            const isGroupDone = t.status === "done";
-            return `<article class="task-item ${isGroupDone ? "done" : ""}" data-id="${t.id}">
-              <div class="check-status-icon">${isGroupDone ? "✓" : ""}</div>
+            // หน้าภาพรวมกลุ่ม: ไม่มีปุ่มติ๊ก แสดงข้อความคนทำเสร็จแล้วใต้งาน
+            return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
@@ -463,7 +487,7 @@ function renderTasks() {
               </div>
             </article>`;
           } else {
-            // ☑ หน้างานของฉัน: มีปุ่มให้คลิกติ๊กส่งงาน/ยกเลิกงานเฉพาะของตนเอง
+            // หน้างานของฉัน: มีปุ่มติ๊กงาน
             return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
               <button class="task-open" data-action="detail">
@@ -657,27 +681,23 @@ function subscribeComments(taskId) {
 
 async function toggleDone(id) {
   const t = tasks.find((x) => x.id === id);
-  if (!t || !user) return;
+  if (!t) return;
 
   const completedBy = t.completedBy || [];
-  // ตรวจสอบว่าบัญชีปัจจุบันเคยติ๊กงานนี้หรือยัง
-  const isDoneByMe = completedBy.includes(user.uid);
-  const myName = nameOf();
+  const isDoneNow = !completedBy.includes(user.uid);
+  const actionText = isDoneNow ? `${nameOf()} ทำเสร็จแล้ว` : `${nameOf()} เปิดงานอีกครั้ง`;
 
   await updateDoc(doc(db, "groups", group.id, "tasks", id), {
-    completedBy: isDoneByMe ? arrayRemove(user.uid) : arrayUnion(user.uid),
-    completedByNames: isDoneByMe ? arrayRemove(myName) : arrayUnion(myName),
-    // ถ้าสมาชิกทุกคนในกลุ่มทำเสร็จหมดแล้ว ให้เปลี่ยนสถานะหลักเป็น "done"
-    status: (!isDoneByMe && (completedBy.length + 1 >= Object.keys(group.data().members || {}).length)) ? "done" : "todo",
+    completedBy: isDoneNow ? arrayUnion(user.uid) : arrayRemove(user.uid),
+    completedByNames: isDoneNow ? arrayUnion(nameOf()) : arrayRemove(nameOf()),
+    status: isDoneNow ? "done" : "todo",
     updatedAt: serverTimestamp(),
-    updatedByName: myName,
+    updatedByName: nameOf(),
   });
 
-  // บันทึก Log กิจกรรมพร้อมระบุ UID ของผู้กระทำ
-  const actionText = !isDoneByMe ? "ทำเสร็จแล้ว" : "เปิดงานอีกครั้ง";
   await logActivity(actionText, t.title);
 
-  toast(!isDoneByMe ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
+  toast(isDoneNow ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
   if (selectedTask?.id === id) close("detailModal");
 }
 
@@ -695,7 +715,6 @@ $("#taskForm").onsubmit = async (e) => {
       members = (group.data && group.data().members) || {};
 
     const taskTitle = $("#taskTitle").value.trim();
-    // บันทึกผู้สร้าง/แก้ไขงานใน taskForm
     const data = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
@@ -707,7 +726,6 @@ $("#taskForm").onsubmit = async (e) => {
       assigneeId: assignee || "",
       assigneeName: members[assignee] || "",
       updatedAt: serverTimestamp(),
-      updatedBy: user.uid,
       updatedByName: nameOf(),
     };
 

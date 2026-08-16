@@ -24,8 +24,8 @@ import {
   onSnapshot,
   serverTimestamp,
   arrayUnion,
-} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { updateDoc, doc, arrayRemove, arrayUnion } from "firebase/firestore";
+  arrayRemove // <-- เพิ่มตัวนี้
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC7yOpsjoUr2As3bolEyxB6DNQGOj8xNPU",
@@ -688,9 +688,9 @@ async function toggleDone(taskId) {
 }
 // ตัวอย่างการกดสลับสถานะติ๊กงาน
 async function toggleTaskDone(taskId) {
-  if (!user || !currentGroupId) return;
+  if (!user || !group || !group.id) return; // เปลี่ยนจาก currentGroupId เป็น group.id
 
-  const taskRef = doc(db, "groups", currentGroupId, "tasks", taskId);
+  const taskRef = doc(db, "groups", group.id, "tasks", taskId);
   const task = tasks.find((t) => t.id === taskId);
   if (!task) return;
 
@@ -702,11 +702,13 @@ async function toggleTaskDone(taskId) {
     await updateDoc(taskRef, {
       completedBy: arrayRemove(user.uid)
     });
+    await logActivity("ยกเลิกการส่งงาน", task.title);
   } else {
     // ✓ ถ้ายังไม่ได้ติ๊ก ให้ "ติ๊กทำเสร็จ" (เพิ่ม UID เข้า Array)
     await updateDoc(taskRef, {
       completedBy: arrayUnion(user.uid)
     });
+    await logActivity("ทำเสร็จแล้ว", task.title);
   }
 }
 

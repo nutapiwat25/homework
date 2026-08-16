@@ -61,60 +61,21 @@
           <b>⌄</b>
         </button>
 
-        <!-- ปรับเปลี่ยน Navigation Bar / Tab Menu -->
-        <nav class="nav-tabs">
-          <button class="nav-btn active" data-view="overview">
-            <span>📊</span> ภาพรวมงาน
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-view="board">
+            <span class="nav-icon">📊</span>ภาพรวมกลุ่ม
           </button>
-          <button class="nav-btn" data-view="board">
-            <span>📋</span> บอร์ดงาน
+          <button class="nav-item" data-view="tasks">
+            <span class="nav-icon">☑</span>งานของฉัน
+            <span class="nav-count" id="sidebarTaskCount">0</span>
           </button>
-          <button class="nav-btn" data-view="calendar">
-            <span>📅</span> ปฏิทิน
+          <button class="nav-item" data-view="calendar">
+            <span class="nav-icon">📅</span>ปฏิทิน
+          </button>
+          <button class="nav-item" data-view="activity">
+            <span class="nav-icon">⚡</span>กิจกรรม
           </button>
         </nav>
-
-        <!-- ในส่วน Main Content -->
-        <main class="app-content">
-          <!-- View: ภาพรวมงาน (Overview View) -->
-          <section id="viewOverview" class="view-section active">
-            <!-- การ์ดสรุปตัวเลขสถิติภาพรวม -->
-            <div class="overview-stats">
-              <div class="stat-card">
-                <span class="stat-label">งานทั้งหมด</span>
-                <span class="stat-value" id="statTotal">0</span>
-              </div>
-              <div class="stat-card pending">
-                <span class="stat-label">กำลังดำเนินการ</span>
-                <span class="stat-value" id="statPending">0</span>
-              </div>
-              <div class="stat-card done">
-                <span class="stat-label">เสร็จสิ้นแล้ว</span>
-                <span class="stat-value" id="statDone">0</span>
-              </div>
-            </div>
-
-            <!-- หัวข้อและตัวกรอง -->
-            <div class="section-header">
-              <h2>รายการงานทั้งหมดในระบบ</h2>
-              <div class="filter-controls">
-                <select id="overviewSubjectFilter">
-                  <option value="all">ทุกวิชา/หมวดหมู่</option>
-                </select>
-                <select id="overviewStatusFilter">
-                  <option value="all">ทุกสถานะ</option>
-                  <option value="pending">ยังไม่เสร็จ</option>
-                  <option value="done">เสร็จแล้ว</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- รายการงานทั้งหมด -->
-            <div id="overviewTaskList" class="task-list"></div>
-          </section>
-
-          <!-- View: บอร์ดงาน (Board View) และ ปฏิทิน (Calendar) ให้คงไว้ตามเดิม -->
-        </main>
 
         <div class="sidebar-footer">
           <div class="member-preview">
@@ -159,13 +120,12 @@
             </button>
           </section>
 
-          <!-- การ์ด 4 อันด้านบน -->
           <section class="stats">
             <article class="stat-card violet">
               <div class="stat-icon">☷</div>
               <div>
                 <span>งานทั้งหมด</span><strong id="totalCount">0</strong>
-                <small id="statLabel1">ในพื้นที่กลุ่ม</small>
+                <small>ในพื้นที่กลุ่ม</small>
               </div>
             </article>
             <article class="stat-card orange">
@@ -179,14 +139,14 @@
               <div class="stat-icon">✓</div>
               <div>
                 <span>งานเสร็จแล้ว</span><strong id="completedCount">0</strong>
-                <small id="statLabel3">ทุกคนช่วยกัน</small>
+                <small>ทุกคนช่วยกัน</small>
               </div>
             </article>
             <article class="stat-card blue">
               <div class="stat-icon">⌇</div>
               <div>
                 <span>ความคืบหน้า</span><strong id="progressCount">0%</strong>
-                <small id="statLabel4">ของทั้งกลุ่ม</small>
+                <small>ของทั้งกลุ่ม</small>
               </div>
             </article>
           </section>
@@ -195,8 +155,8 @@
             <div class="task-section card-surface">
               <div class="section-heading">
                 <div>
-                  <h2 id="sectionTitle">งานของกลุ่ม</h2>
-                  <p id="sectionSub">มอบหมาย ติดตาม และช่วยกันปิดงาน</p>
+                  <h2>งานของกลุ่ม</h2>
+                  <p>มอบหมาย ติดตาม และช่วยกันปิดงาน</p>
                 </div>
                 <button class="text-button" id="showAllTasks">
                   ดูทั้งหมด →
@@ -221,7 +181,16 @@
             </div>
 
             <aside class="right-column">
-              <!-- นำ due-card ออกแล้ว เหลือเฉพาะกิจกรรมล่าสุด -->
+              <section class="card-surface due-card">
+                <div class="mini-heading">
+                  <div>
+                    <h2>กำหนดส่งถัดไป</h2>
+                    <p>เรียงตามวันส่ง</p>
+                  </div>
+                </div>
+                <div id="dueList" class="due-list"></div>
+              </section>
+
               <section class="card-surface activity-card">
                 <div class="mini-heading">
                   <div>

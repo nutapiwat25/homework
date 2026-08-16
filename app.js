@@ -24,7 +24,6 @@ import {
   onSnapshot,
   serverTimestamp,
   arrayUnion,
-  arrayRemove,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -59,7 +58,6 @@ let user,
   tasks = [],
   currentActivities = [],
   activeFilter = "all",
-  currentView = "board", // ระบุ view ปัจจุบัน ("board" หรือ "tasks")
   selectedTask,
   stopTasks,
   stopComments,
@@ -68,8 +66,7 @@ let user,
   toastTimer,
   currCalDate = new Date(),
   selectedCalDate = null,
-  registerMode = false,
-  currentView = "overview";
+  registerMode = false;
 
 const today = () => new Date().toISOString().slice(0, 10);
 const nameOf = () =>
@@ -101,26 +98,21 @@ function close(id) {
   $(`#${id}`).classList.remove("open");
 }
 
-document.querySelectorAll(".nav-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".view-section").forEach((s) => s.classList.remove("active"));
-
-    btn.classList.add("active");
-    currentView = btn.dataset.view;
-
-    if (currentView === "overview") {
-      $("#viewOverview").classList.add("active");
-      renderOverview();
-    } else if (currentView === "board") {
-      $("#viewBoard").classList.add("active");
-      renderBoard();
-    } else if (currentView === "calendar") {
-      $("#viewCalendar").classList.add("active");
-      renderCalendar();
-    }
-  });
-});
+document.querySelectorAll(".auth-tab").forEach(
+  (b) =>
+    (b.onclick = () => {
+      registerMode = b.dataset.auth === "signup";
+      document
+        .querySelectorAll(".auth-tab")
+        .forEach((x) => x.classList.toggle("active", x === b));
+      $(".name-field").classList.toggle("hidden", !registerMode);
+      $("#displayName").required = registerMode;
+      $("#authSubmit").textContent = registerMode
+        ? "สร้างบัญชีและเริ่มกลุ่ม"
+        : "เข้าสู่ระบบ";
+      $("#authError").textContent = "";
+    }),
+);
 
 $("#authForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -359,66 +351,24 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  if (currentView === "tasks") {
-    // 📊 แถบด้านบนแสดงสถิติเฉพาะ "งานของฉัน"
-    const myTasks = tasks.filter((t) => t.assigneeId === user.uid);
-    const myDone = myTasks.filter((t) =>
-      t.completedBy ? t.completedBy.includes(user.uid) : t.status === "done",
-    ).length;
-    const myUrgent = myTasks.filter((t) => {
-      const isDone = t.completedBy ? t.completedBy.includes(user.uid) : t.status === "done";
-      return !isDone && daysAway(t.due) >= 0 && daysAway(t.due) <= 3;
-    }).length;
-    const myPending = myTasks.length - myDone;
-
-    $("#totalCount").textContent = myTasks.length;
-    $("#urgentCount").textContent = myUrgent;
-    $("#completedCount").textContent = myDone;
-    $("#progressCount").textContent = myTasks.length
-      ? `${Math.round((myDone / myTasks.length) * 100)}%`
-      : "0%";
-
-    $("#statLabel1").textContent = "งานส่วนตัวของฉัน";
-    $("#statLabel3").textContent = "ฉันทำเสร็จแล้ว";
-    $("#statLabel4").textContent = "ความคืบหน้าส่วนตัว";
-
-    $("#sidebarTaskCount").textContent = myPending;
-    $("#motivation").textContent = myPending
-      ? `คุณยังมีอีก ${myPending} งานส่วนตัวที่ต้องจัดการ`
-      : "เคลียร์งานส่วนตัวครบหมดแล้ว เก่งมาก!";
-  } else {
-    // 📊 แถบด้านบนแสดงสถิติ "ภาพรวมคนในกลุ่ม"
-    const done = tasks.filter((t) => t.status === "done").length;
-    const urgent = tasks.filter(
+  const done = tasks.filter((t) => t.status === "done").length,
+    urgent = tasks.filter(
       (t) =>
         t.status !== "done" && daysAway(t.due) >= 0 && daysAway(t.due) <= 3,
-    ).length;
-    const pending = tasks.length - done;
-
-    $("#totalCount").textContent = tasks.length;
-    $("#urgentCount").textContent = urgent;
-    $("#completedCount").textContent = done;
-    $("#progressCount").textContent = tasks.length
-      ? `${Math.round((done / tasks.length) * 100)}%`
-      : "0%";
-
-    $("#statLabel1").textContent = "ในพื้นที่กลุ่ม";
-    $("#statLabel3").textContent = "ทุกคนช่วยกัน";
-    $("#statLabel4").textContent = "ของทั้งกลุ่ม";
-
-    const myPending = tasks.filter(
-      (t) =>
-        t.assigneeId === user.uid &&
-        !(t.completedBy ? t.completedBy.includes(user.uid) : t.status === "done"),
-    ).length;
-    $("#sidebarTaskCount").textContent = myPending;
-
-    $("#motivation").textContent = pending
-      ? `ยังมี ${pending} งานที่กลุ่มช่วยกันจัดการได้`
-      : "เคลียร์ทุกงานแล้ว เยี่ยมมากทั้งกลุ่ม!";
-  }
-
+    ).length,
+    pending = tasks.length - done;
+  $("#totalCount").textContent = tasks.length;
+  $("#urgentCount").textContent = urgent;
+  $("#completedCount").textContent = done;
+  $("#progressCount").textContent = tasks.length
+    ? `${Math.round((done / tasks.length) * 100)}%`
+    : "0%";
+  $("#sidebarTaskCount").textContent = pending;
+  $("#motivation").textContent = pending
+    ? `ยังมี ${pending} งานที่กลุ่มช่วยกันจัดการได้`
+    : "เคลียร์ทุกงานแล้ว เยี่ยมมากทั้งกลุ่ม!";
   renderTasks();
+  renderDue();
   renderActivity();
   renderCalendar();
 }
@@ -426,18 +376,13 @@ function render() {
 function filtered() {
   const term = $("#searchInput").value.toLowerCase();
   return tasks.filter((t) => {
-    let ok = true;
-    if (currentView === "tasks") {
-      ok = t.assigneeId === user.uid;
-    } else {
-      ok =
-        activeFilter === "all" ||
-        (activeFilter === "mine" && t.assigneeId === user.uid) ||
-        (activeFilter === "week" &&
-          daysAway(t.due) >= 0 &&
-          daysAway(t.due) <= 7) ||
-        (activeFilter === "done" && t.status === "done");
-    }
+    const ok =
+      activeFilter === "all" ||
+      (activeFilter === "mine" && t.assigneeId === user.uid) ||
+      (activeFilter === "week" &&
+        daysAway(t.due) >= 0 &&
+        daysAway(t.due) <= 7) ||
+      (activeFilter === "done" && t.status === "done");
     return (
       ok &&
       `${t.title} ${t.subject} ${t.note || ""}`.toLowerCase().includes(term)
@@ -458,58 +403,48 @@ function due(t) {
 
 function renderTasks() {
   const list = filtered();
-
   $("#taskList").innerHTML = list.length
     ? list
-        .map((t) => {
-          const completedNames = t.completedByNames || [];
-          const isDoneByMe = t.completedBy
-            ? t.completedBy.includes(user.uid)
-            : t.status === "done";
-
-          let doneUsersHtml = "";
-          if (completedNames.length > 0) {
-            doneUsersHtml = `<div class="completed-by-text">✓ ทำแล้ว: <span>${completedNames.map((n) => esc(n)).join(", ")}</span></div>`;
-          } else {
-            doneUsersHtml = `<div class="completed-by-text pending">○ ยังไม่มีคนส่งงาน</div>`;
-          }
-
-          if (currentView === "board") {
-            return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
-              <div class="task-open" data-action="detail">
+        .map(
+          (t) =>
+            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
+              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
+              <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
                   <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
-                ${doneUsersHtml}
-              </div>
+              </button>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
               </div>
-            </article>`;
-          } else {
-            return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
-              <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
-              <div class="task-open" data-action="detail">
-                <span class="task-title">${esc(t.title)}</span>
-                <span class="task-meta">
-                  <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-                  <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
-                  <span class="due-date">◷ ${due(t)}</span>
-                </span>
-              </div>
-              <div class="task-actions">
-                <span class="priority-dot ${t.priority}"></span>
-                <button class="edit-task" data-action="edit">✎</button>
-              </div>
-            </article>`;
-          }
-        })
+            </article>`,
+        )
         .join("")
     : '<div class="empty-list"><span>☁</span>ยังไม่มีงานในรายการนี้<br>เพิ่มงานแรกให้กลุ่มกันเลย</div>';
+}
+
+function renderDue() {
+  $("#dueList").innerHTML =
+    tasks
+      .filter((t) => t.status !== "done")
+      .slice(0, 4)
+      .map(
+        (t) =>
+          `<button class="due-row" data-task="${t.id}">
+            <div class="due-row-main">
+              <b class="due-row-title">${esc(t.title)}</b>
+              <div class="due-row-meta">
+                <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+              </div>
+            </div>
+            <span class="due-tag">◷ ${due(t)}</span>
+          </button>`,
+      )
+      .join("") || '<p class="tiny-empty">ยังไม่มีงานค้าง</p>';
 }
 
 function renderCalendar() {
@@ -593,14 +528,14 @@ function renderCalendarTasks() {
           (t) =>
             `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
-              <div class="task-open" data-action="detail">
+              <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
                   <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
-              </div>
+              </button>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
@@ -611,69 +546,6 @@ function renderCalendarTasks() {
     : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
 }
 
-function renderOverview() {
-  if (!tasks) return;
-
-  // คำนวณสถิติภาพรวม
-  const total = tasks.length;
-  const doneCount = tasks.filter((t) => t.status === "done").length;
-  const pendingCount = total - doneCount;
-
-  // อัปเดตตัวเลขใน Stat Cards
-  $("#statTotal").textContent = total;
-  $("#statPending").textContent = pendingCount;
-  $("#statDone").textContent = doneCount;
-
-  // ดึงค่าตัวกรอง (Filter)
-  const subjectFilter = $("#overviewSubjectFilter") ? $("#overviewSubjectFilter").value : "all";
-  const statusFilter = $("#overviewStatusFilter") ? $("#overviewStatusFilter").value : "all";
-
-  // กรองรายการงานทั้งหมด
-  let filteredTasks = tasks.filter((t) => {
-    const matchSubject = subjectFilter === "all" || t.subject === subjectFilter;
-    const matchStatus =
-      statusFilter === "all" ||
-      (statusFilter === "done" && t.status === "done") ||
-      (statusFilter === "pending" && t.status !== "done");
-    return matchSubject && matchStatus;
-  });
-
-  // Render รายการงานในภาพรวม
-  const container = $("#overviewTaskList");
-  if (!filteredTasks.length) {
-    container.innerHTML = '<div class="empty-list"><span>☁</span>ไม่มีงานในระบบขณะนี้</div>';
-    return;
-  }
-
-  container.innerHTML = filteredTasks
-    .map((t) => {
-      const isDone = t.status === "done";
-      const completedNames = t.completedByNames || [];
-      let doneInfo = completedNames.length
-        ? `<div class="completed-by-text">✓ ส่งแล้ว: ${completedNames.map((n) => esc(n)).join(", ")}</div>`
-        : `<div class="completed-by-text pending">○ ยังไม่มีคนส่งงาน</div>`;
-
-      return `
-        <article class="task-item ${isDone ? "done" : ""}" data-id="${t.id}">
-          <button class="check-button" data-action="done">${isDone ? "✓" : ""}</button>
-          <div class="task-open" data-action="detail">
-            <span class="task-title">${esc(t.title)}</span>
-            <span class="task-meta">
-              <span class="subject-pill">${esc(t.subject || "ทั่วไป")}</span>
-              <span class="assignee">👤 ${esc(t.assigneeName || "ไม่ระบุผู้รับผิดชอบ")}</span>
-              <span class="due-date">◷ ${due(t)}</span>
-            </span>
-            ${doneInfo}
-          </div>
-          <div class="task-actions">
-            <span class="priority-dot ${t.priority}"></span>
-            <button class="edit-task" data-action="edit">✎</button>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-}
 function openTask(id) {
   const t = id ? tasks.find((x) => x.id === id) : null;
   $("#taskForm").reset();
@@ -705,10 +577,6 @@ async function showDetail(id) {
     ? `<p class="detail-link"><b>🔗 ลิงก์ประกอบ:</b> <a href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">${esc(t.link)}</a></p>`
     : "";
 
-  const isDoneByMe = t.completedBy
-    ? t.completedBy.includes(user.uid)
-    : t.status === "done";
-
   $("#taskDetail").innerHTML = `
     <div class="detail-head">
       <span class="subject-pill subject-cs">${esc(t.subject)}</span>
@@ -717,7 +585,7 @@ async function showDetail(id) {
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
       ${linkHtml}
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
-      <button id="detailDone" class="secondary-button">${isDoneByMe ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button>
+      <button id="detailDone" class="secondary-button">${t.status === "done" ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button>
     </div>
   `;
 
@@ -749,13 +617,10 @@ async function toggleDone(id) {
   const t = tasks.find((x) => x.id === id);
   if (!t) return;
 
-  const completedBy = t.completedBy || [];
-  const isDoneNow = !completedBy.includes(user.uid);
-  const actionText = isDoneNow ? `${nameOf()} ทำเสร็จแล้ว` : `${nameOf()} เปิดงานอีกครั้ง`;
+  const isDoneNow = t.status !== "done";
+  const actionText = isDoneNow ? "ทำเสร็จแล้ว" : "เปิดงานอีกครั้ง";
 
   await updateDoc(doc(db, "groups", group.id, "tasks", id), {
-    completedBy: isDoneNow ? arrayUnion(user.uid) : arrayRemove(user.uid),
-    completedByNames: isDoneNow ? arrayUnion(nameOf()) : arrayRemove(nameOf()),
     status: isDoneNow ? "done" : "todo",
     updatedAt: serverTimestamp(),
     updatedByName: nameOf(),
@@ -802,8 +667,6 @@ $("#taskForm").onsubmit = async (e) => {
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...data,
         status: "todo",
-        completedBy: [],
-        completedByNames: [],
         createdBy: user ? user.uid : "",
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
@@ -850,6 +713,11 @@ $("#taskList").onclick = (e) => {
   if (b.dataset.action === "done") toggleDone(id);
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
+};
+
+$("#dueList").onclick = (e) => {
+  const row = e.target.closest("[data-task]");
+  if (row) showDetail(row.dataset.task);
 };
 
 ["newTaskButton", "addInlineButton"].forEach((id) => {
@@ -927,32 +795,26 @@ document.querySelectorAll(".nav-item").forEach(
       document
         .querySelectorAll(".nav-item")
         .forEach((x) => x.classList.toggle("active", x === b));
-
       $("#viewTitle").textContent = {
-        board: "ภาพรวมกลุ่ม",
+        board: "ภาพรวม",
         tasks: "งานส่วนตัว",
         calendar: "ปฏิทิน",
         activity: "กิจกรรม",
-      }[v] || "ภาพรวมกลุ่ม";
+      }[v] || "ภาพรวม";
 
       $("#boardView").classList.toggle("hidden", !["board", "tasks"].includes(v));
       $("#calendarView").classList.toggle("hidden", v !== "calendar");
       $("#activityView").classList.toggle("hidden", v !== "activity");
 
       if (v === "tasks") {
-        currentView = "tasks";
-        $("#sectionTitle").textContent = "งานส่วนตัวของฉัน";
-        $("#sectionSub").textContent = "เช็คและอัปเดตสถานะงานที่คุณได้รับมอบหมาย";
-        render();
+        activeFilter = "mine";
+        document.querySelectorAll(".filter-tab").forEach((x) => x.classList.toggle("active", x.dataset.filter === "mine"));
+        renderTasks();
       } else if (v === "board") {
-        currentView = "board";
         activeFilter = "all";
-        $("#sectionTitle").textContent = "งานของกลุ่ม";
-        $("#sectionSub").textContent = "มอบหมาย ติดตาม และช่วยกันปิดงาน";
         document.querySelectorAll(".filter-tab").forEach((x) => x.classList.toggle("active", x.dataset.filter === "all"));
-        render();
+        renderTasks();
       }
-
       if (v === "calendar") {
         renderCalendar();
       }
@@ -1015,5 +877,3 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
 };
-$("#overviewSubjectFilter")?.addEventListener("change", renderOverview);
-$("#overviewStatusFilter")?.addEventListener("change", renderOverview);

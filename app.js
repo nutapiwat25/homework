@@ -401,30 +401,49 @@ function due(t) {
         : fmt(t.due);
 }
 
+// ปรับปรุงฟังก์ชัน renderTasks()
 function renderTasks() {
   const list = filtered();
+  const members = (group && group.data && group.data().members) || {};
+
   $("#taskList").innerHTML = list.length
-    ? list
-        .map(
-          (t) =>
-            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
-              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
-              <button class="task-open" data-action="detail">
-                <span class="task-title">${esc(t.title)}</span>
-                <span class="task-meta">
-                  <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-                  <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
-                  <span class="due-date">◷ ${due(t)}</span>
-                </span>
-              </button>
-              <div class="task-actions">
-                <span class="priority-dot ${t.priority}"></span>
-                <button class="edit-task" data-action="edit">✎</button>
+    ? list.map((t) => {
+        const completedUids = t.completedBy || [];
+        // สร้างข้อความรายชื่อคนทำเสร็จแล้ว
+        const doneNames = completedUids
+          .map((uid) => members[uid] || "สมาชิก")
+          .join(", ");
+
+        const doneStatusText = doneNames
+          ? `<span class="done-by-text">✓ ทำแล้ว: ${esc(doneNames)}</span>`
+          : `<span class="pending-text">ยังไม่มีคนทำเสร็จ</span>`;
+
+        // ในหน้า ภาพรวมกลุ่ม (activeFilter !== 'mine') จะไม่มีปุ่มติ๊ก check-button
+        const isMyView = activeFilter === "mine";
+        const isDoneByMe = completedUids.includes(user.uid);
+
+        return `
+          <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
+            ${isMyView ? `<button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>` : ""}
+            <button class="task-open" data-action="detail">
+              <span class="task-title">${esc(t.title)}</span>
+              <span class="task-meta">
+                <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+                <span class="assignee">${esc(t.assigneeName || "งานกลุ่ม")}</span>
+                <span class="due-date">◷ ${due(t)}</span>
+              </span>
+              <div class="task-completed-status">
+                ${doneStatusText}
               </div>
-            </article>`,
-        )
-        .join("")
-    : '<div class="empty-list"><span>☁</span>ยังไม่มีงานในรายการนี้<br>เพิ่มงานแรกให้กลุ่มกันเลย</div>';
+            </button>
+            <div class="task-actions">
+              <span class="priority-dot ${t.priority}"></span>
+              <button class="edit-task" data-action="edit">✎</button>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : '<div class="empty-list">ยังไม่มีงานในรายการนี้</div>';
 }
 
 function renderDue() {
@@ -525,8 +544,11 @@ function renderCalendarTasks() {
   $("#calendarTaskList").innerHTML = list.length
     ? list
         .map(
-          (t) =>
-            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
+          (t) => {
+            const completedUids = t.completedBy || [];
+            const doneNames = completedUids.map((uid) => members[uid] || "สมาชิก").join(", ");
+            const doneText = doneNames ? `<div class="cal-done-users">✓ ทำแล้ว: ${esc(doneNames)}</div>` : "";
+            return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
@@ -540,8 +562,8 @@ function renderCalendarTasks() {
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
               </div>
-            </article>`,
-        )
+            </article>`;
+        })
         .join("")
     : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
 }
@@ -613,23 +635,32 @@ function subscribeComments(taskId) {
   });
 }
 
-async function toggleDone(id) {
-  const t = tasks.find((x) => x.id === id);
-  if (!t) return;
+// ใน app.js
+async function toggleDone(taskId) {
+  const t = tasks.find((x) => x.id === taskId);
+  if (!t || !user) return;
 
-  const isDoneNow = t.status !== "done";
-  const actionText = isDoneNow ? "ทำเสร็จแล้ว" : "เปิดงานอีกครั้ง";
+  const completedList = t.completedBy || [];
+  const isDoneByMe = completedList.includes(user.uid);
+  const taskRef = doc(db, "groups", group.id, "tasks", taskId);
 
-  await updateDoc(doc(db, "groups", group.id, "tasks", id), {
-    status: isDoneNow ? "done" : "todo",
-    updatedAt: serverTimestamp(),
-    updatedByName: nameOf(),
-  });
-
-  await logActivity(actionText, t.title);
-
-  toast(isDoneNow ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
-  if (selectedTask?.id === id) close("detailModal");
+  if (isDoneByMe) {
+    // ยกเลิกสถานะทำเสร็จของตัวเอง
+    await updateDoc(taskRef, {
+      completedBy: arrayRemove(user.uid),
+      updatedAt: serverTimestamp(),
+    });
+    await logActivity("ยกเลิกการส่งงาน", t.title);
+    toast("ยกเลิกทำเครื่องหมายว่าเสร็จแล้ว");
+  } else {
+    // บันทึกว่าทำเสร็จแล้ว
+    await updateDoc(taskRef, {
+      completedBy: arrayUnion(user.uid),
+      updatedAt: serverTimestamp(),
+    });
+    await logActivity("ทำเสร็จแล้ว", t.title);
+    toast("เก่งมาก! ทำงานนี้เสร็จแล้ว");
+  }
 }
 
 $("#taskForm").onsubmit = async (e) => {

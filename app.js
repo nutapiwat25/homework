@@ -135,7 +135,9 @@ onAuthStateChanged(auth, async (u) => {
   if (!u) {
     $("#authScreen").classList.remove("hidden");
     $("#appShell").classList.add("hidden");
+    if (stopGroups) stopGroups();
     if (stopTasks) stopTasks();
+    if (stopComments) stopComments();
     return;
   }
   $("#authScreen").classList.add("hidden");
@@ -307,8 +309,7 @@ function renderActivity() {
       .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
 }
 function openTask(id) {
-  const t = tasks.find((x) => x.id === id);
-  if (!t) return;
+  const t = id ? tasks.find((x) => x.id === id) : null;
   $("#taskForm").reset();
   $("#taskId").value = t?.id || "";
   $("#taskModalTitle").textContent = t ? "แก้ไขงาน" : "เพิ่มงานใหม่";
@@ -319,7 +320,9 @@ function openTask(id) {
     $("#taskAssignee").value = t.assigneeId || "";
     $("#taskPriority").value = t.priority;
     $("#taskNote").value = t.note || "";
-  } else $("#taskDue").value = today();
+  } else {
+    $("#taskDue").value = today();
+  }
   open("taskModal");
 }
 async function showDetail(id) {

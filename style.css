@@ -1026,7 +1026,7 @@ body.dark .task-modal input,
 body.dark .task-modal select,
 body.dark .task-modal textarea {
   background: #302f43;
-  color: var(--text);
+  color: #dfddec;
 }
 body.dark .task-item:hover {
   background: #302f43;

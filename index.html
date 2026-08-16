@@ -205,10 +205,40 @@
           </section>
         </section>
         <section class="page hidden" id="calendarView">
-          <div class="blank-page">
-            <span>▦</span>
-            <h1>ปฏิทินกำลังพัฒนา</h1>
-            <p>กำหนดส่งทุกงานยังแสดงในหน้า Overview</p>
+          <div class="card-surface calendar-card-full">
+            <div class="calendar-header">
+              <div class="calendar-title-group">
+                <h2 id="calendarMonthYear">มกราคม 2026</h2>
+                <p>คลิกเลือกวันที่เพื่อดูรายการงานกำหนดส่งในวันนั้น</p>
+              </div>
+              <div class="calendar-nav">
+                <button class="secondary-button" id="prevMonth">‹ เดือนก่อนหน้า</button>
+                <button class="secondary-button" id="todayMonth">วันนี้</button>
+                <button class="secondary-button" id="nextMonth">เดือนถัดไป ›</button>
+              </div>
+            </div>
+            
+            <div class="calendar-week">
+              <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+            </div>
+            <div class="calendar-days" id="calendarGrid"></div>
+            
+            <div class="calendar-legend">
+              <span><i class="dot lilac"></i> มีกำหนดส่ง</span>
+              <span><i class="dot peach"></i> ด่วน / เลยกำหนด</span>
+              <span><i class="dot green"></i> เสร็จสิ้นแล้ว</span>
+            </div>
+          </div>
+
+          <div class="card-surface task-section" style="margin-top: 20px;">
+            <div class="section-heading">
+              <div>
+                <h2 id="selectedDateTitle">งานกำหนดส่งวันนี้</h2>
+                <p id="selectedDateSub">รายการงานตามวันที่เลือกในปฏิทิน</p>
+              </div>
+              <button class="text-button" id="clearDateFilter">แสดงงานทั้งหมดในเดือนนี้</button>
+            </div>
+            <div class="task-list" id="calendarTaskList"></div>
           </div>
         </section>
         <section class="page hidden" id="activityView">

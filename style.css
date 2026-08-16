@@ -1681,3 +1681,87 @@ body.dark .stat-card span {
     margin-bottom: 18px;
   }
 }
+/* Calendar UI Styles */
+.calendar-card-full {
+  padding: 24px;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.calendar-title-group h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.calendar-title-group p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.calendar-nav {
+  display: flex;
+  gap: 6px;
+}
+.calendar-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+.cal-day-cell {
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px;
+  cursor: pointer;
+  background: var(--surface);
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.cal-day-cell:hover {
+  border-color: var(--primary);
+  background: var(--surface-soft);
+}
+.cal-day-cell.other-month {
+  opacity: 0.35;
+  background: transparent;
+}
+.cal-day-cell.today {
+  border-color: var(--primary);
+  background: #f4f2ff;
+}
+body.dark .cal-day-cell.today {
+  background: #353252;
+}
+.cal-day-cell.selected {
+  outline: 2px solid var(--primary);
+  box-shadow: 0 0 0 4px rgba(102, 88, 232, 0.15);
+}
+.cal-day-num {
+  font-weight: 700;
+  font-size: 12px;
+}
+.cal-day-dots {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.dot.green {
+  background: #5fc296;
+}

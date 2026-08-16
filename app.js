@@ -58,6 +58,8 @@ let user,
   stopComments,
   stopGroups,
   toastTimer,
+  currCalDate = new Date(),
+  selectedCalDate = null,
   registerMode = false;
 const today = () => new Date().toISOString().slice(0, 10);
 const nameOf = () =>
@@ -247,6 +249,7 @@ function render() {
   renderTasks();
   renderDue();
   renderActivity();
+  renderCalendar();
 }
 function filtered() {
   const term = $("#searchInput").value.toLowerCase();
@@ -307,6 +310,199 @@ function renderActivity() {
           `<div class="activity-row"><span>${initials(t.updatedByName || t.createdByName)}</span><p><b>${esc(t.updatedByName || t.createdByName || "สมาชิก")}</b> อัปเดตงาน<br><small>${esc(t.title)}</small></p></div>`,
       )
       .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
+}
+function renderCalendar() {
+  const year = currCalDate.getFullYear();
+  const month = currCalDate.getMonth();
+  
+  // แสดงหัวข้อเดือน/ปี ภาษาไทย
+  const monthNames = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+  $("#calendarMonthYear").textContent = `${monthNames[month]} ${year + 543}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  let html = "";
+
+  // วันของเดือนก่อนหน้า
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = prevMonthDays - i;
+    html += `<div class="cal-day-cell other-month"><span class="cal-day-num">${d}</span></div>`;
+  }
+
+  // วันของเดือนปัจจุบัน
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const dayTasks = tasks.filter((t) => t.due === dateStr);
+    const isToday = dateStr === today();
+    const isSelected = selectedCalDate === dateStr;
+
+    let dotsHtml = "";
+    if (dayTasks.length > 0) {
+      const hasDone = dayTasks.some((t) => t.status === "done");
+      const hasUrgent = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) <= 3);
+      const hasNormal = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) > 3);
+
+      if (hasUrgent) dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
+      if (hasNormal) dotsHtml += `<i class="dot lilac" title="มีงานส่งวันนี้"></i>`;
+      if (hasDone) dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
+    }
+
+    html += `
+      <div class="cal-day-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}" data-date="${dateStr}">
+        <span class="cal-day-num">${d}</span>
+        <div class="cal-day-dots">${dotsHtml}</div>
+      </div>
+    `;
+  }
+
+  // วันของเดือนถัดไปเพื่อให้ครบสัปดาห์
+  const totalCells = firstDay + daysInMonth;
+  const nextDays = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= nextDays; i++) {
+    html += `<div class="cal-day-cell other-month"><span class="cal-day-num">${i}</span></div>`;
+  }
+
+  $("#calendarGrid").innerHTML = html;
+  renderCalendarTasks();
+}
+
+function renderCalendarTasks() {
+  let list = [];
+  if (selectedCalDate) {
+    list = tasks.filter((t) => t.due === selectedCalDate);
+    $("#selectedDateTitle").textContent = `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
+    $("#selectedDateSub").textContent = `พบ ${list.length} รายการ`;
+  } else {
+    // แสดงงานทั้งหมดในเดือนปัจจุบันที่เลือกอยู่
+    const monthStr = `${currCalDate.getFullYear()}-${String(currCalDate.getMonth() + 1).padStart(2, "0")}`;
+    list = tasks.filter((t) => t.due && t.due.startsWith(monthStr));
+    $("#selectedDateTitle").textContent = "งานทั้งหมดในเดือนนี้";
+    $("#selectedDateSub").textContent = `พบ ${list.length} รายการในเดือนนี้`;
+  }
+
+  $("#calendarTaskList").innerHTML = list.length
+    ? list
+        .map(
+          (t) =>
+            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
+              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
+              <button class="task-open" data-action="detail">
+                <span class="task-title">${esc(t.title)}</span>
+                <span class="task-meta">
+                  <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+                  <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
+                  <span class="due-date">◷ ${due(t)}</span>
+                </span>
+              </button>
+              <div class="task-actions">
+                <span class="priority-dot ${t.priority}"></span>
+                <button class="edit-task" data-action="edit">✎</button>
+              </div>
+            </article>`
+        )
+        .join("")
+    : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
+}function renderCalendar() {
+  const year = currCalDate.getFullYear();
+  const month = currCalDate.getMonth();
+  
+  // แสดงหัวข้อเดือน/ปี ภาษาไทย
+  const monthNames = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+  $("#calendarMonthYear").textContent = `${monthNames[month]} ${year + 543}`;
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  let html = "";
+
+  // วันของเดือนก่อนหน้า
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = prevMonthDays - i;
+    html += `<div class="cal-day-cell other-month"><span class="cal-day-num">${d}</span></div>`;
+  }
+
+  // วันของเดือนปัจจุบัน
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const dayTasks = tasks.filter((t) => t.due === dateStr);
+    const isToday = dateStr === today();
+    const isSelected = selectedCalDate === dateStr;
+
+    let dotsHtml = "";
+    if (dayTasks.length > 0) {
+      const hasDone = dayTasks.some((t) => t.status === "done");
+      const hasUrgent = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) <= 3);
+      const hasNormal = dayTasks.some((t) => t.status !== "done" && daysAway(t.due) > 3);
+
+      if (hasUrgent) dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
+      if (hasNormal) dotsHtml += `<i class="dot lilac" title="มีงานส่งวันนี้"></i>`;
+      if (hasDone) dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
+    }
+
+    html += `
+      <div class="cal-day-cell ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}" data-date="${dateStr}">
+        <span class="cal-day-num">${d}</span>
+        <div class="cal-day-dots">${dotsHtml}</div>
+      </div>
+    `;
+  }
+
+  // วันของเดือนถัดไปเพื่อให้ครบสัปดาห์
+  const totalCells = firstDay + daysInMonth;
+  const nextDays = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= nextDays; i++) {
+    html += `<div class="cal-day-cell other-month"><span class="cal-day-num">${i}</span></div>`;
+  }
+
+  $("#calendarGrid").innerHTML = html;
+  renderCalendarTasks();
+}
+
+function renderCalendarTasks() {
+  let list = [];
+  if (selectedCalDate) {
+    list = tasks.filter((t) => t.due === selectedCalDate);
+    $("#selectedDateTitle").textContent = `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
+    $("#selectedDateSub").textContent = `พบ ${list.length} รายการ`;
+  } else {
+    // แสดงงานทั้งหมดในเดือนปัจจุบันที่เลือกอยู่
+    const monthStr = `${currCalDate.getFullYear()}-${String(currCalDate.getMonth() + 1).padStart(2, "0")}`;
+    list = tasks.filter((t) => t.due && t.due.startsWith(monthStr));
+    $("#selectedDateTitle").textContent = "งานทั้งหมดในเดือนนี้";
+    $("#selectedDateSub").textContent = `พบ ${list.length} รายการในเดือนนี้`;
+  }
+
+  $("#calendarTaskList").innerHTML = list.length
+    ? list
+        .map(
+          (t) =>
+            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
+              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
+              <button class="task-open" data-action="detail">
+                <span class="task-title">${esc(t.title)}</span>
+                <span class="task-meta">
+                  <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+                  <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
+                  <span class="due-date">◷ ${due(t)}</span>
+                </span>
+              </button>
+              <div class="task-actions">
+                <span class="priority-dot ${t.priority}"></span>
+                <button class="edit-task" data-action="edit">✎</button>
+              </div>
+            </article>`
+        )
+        .join("")
+    : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
 }
 function openTask(id) {
   const t = id ? tasks.find((x) => x.id === id) : null;
@@ -505,6 +701,9 @@ document.querySelectorAll(".nav-item").forEach(
         activeFilter = "all";
         renderTasks();
       }
+      if (v === "calendar") {
+        renderCalendar();
+      }
       $("#sidebar").classList.remove("open");
     }),
 );
@@ -524,3 +723,42 @@ $("#todayLabel").textContent = new Intl.DateTimeFormat("th-TH", {
   month: "long",
   year: "numeric",
 }).format(new Date());
+// Calendar Navigation & Action Events
+$("#prevMonth").onclick = () => {
+  currCalDate.setMonth(currCalDate.getMonth() - 1);
+  selectedCalDate = null;
+  renderCalendar();
+};
+
+$("#nextMonth").onclick = () => {
+  currCalDate.setMonth(currCalDate.getMonth() + 1);
+  selectedCalDate = null;
+  renderCalendar();
+};
+
+$("#todayMonth").onclick = () => {
+  currCalDate = new Date();
+  selectedCalDate = today();
+  renderCalendar();
+};
+
+$("#calendarGrid").onclick = (e) => {
+  const cell = e.target.closest(".cal-day-cell[data-date]");
+  if (!cell) return;
+  selectedCalDate = cell.dataset.date;
+  renderCalendar();
+};
+
+$("#clearDateFilter").onclick = () => {
+  selectedCalDate = null;
+  renderCalendar();
+};
+
+$("#calendarTaskList").onclick = (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const id = b.closest(".task-item").dataset.id;
+  if (b.dataset.action === "done") toggleDone(id);
+  if (b.dataset.action === "edit") openTask(id);
+  if (b.dataset.action === "detail") showDetail(id);
+};

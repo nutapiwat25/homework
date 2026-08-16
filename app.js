@@ -22,15 +22,7 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
-  arrayUnion,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-// 1. เพิ่มการ Import Firebase Storage
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC7yOpsjoUr2As3bolEyxB6DNQGOj8xNPU",
@@ -40,10 +32,10 @@ const firebaseConfig = {
   messagingSenderId: "1078534206598",
   appId: "1:1078534206598:web:0cc8b1334851c3cc4f8d07",
 };
+
 const app = initializeApp(firebaseConfig),
   auth = getAuth(app),
-  db = getFirestore(app),
-  storage = getStorage(app); // 2. ประกาศตัวแปร storage
+  db = getFirestore(app);
 const $ = (s) => document.querySelector(s),
   esc = (s) =>
     String(s || "").replace(
@@ -421,7 +413,7 @@ function openTask(id) {
   $("#taskForm").reset();
   $("#taskId").value = t?.id || "";
   $("#taskModalTitle").textContent = t ? "แก้ไขงาน" : "เพิ่มงานใหม่";
-  
+
   if (t) {
     $("#taskTitle").value = t.title || "";
     $("#taskSubject").value = t.subject || "";
@@ -432,7 +424,7 @@ function openTask(id) {
     $("#taskLink").value = t.link || "";
     $("#taskNote").value = t.note || "";
   } else {
-    $("#taskSection").value = "section650001"; // กำหนดค่าเริ่มต้น
+    $("#taskSection").value = "section650001";
     $("#taskDue").value = today();
   }
   open("taskModal");
@@ -455,7 +447,7 @@ async function showDetail(id) {
   $("#taskDetail").innerHTML = `
     <div class="detail-head">
       <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-      <span class="subject-pill subject-ba">${esc(t.section || "section65001")}</span>
+      <span class="subject-pill subject-ba">${esc(t.section || "section650001")}</span>
       <h2>${esc(t.title)}</h2>
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
       
@@ -504,67 +496,53 @@ async function toggleDone(id) {
 }
 $("#taskForm").onsubmit = async (e) => {
   e.preventDefault();
+  
   const submitBtn = e.target.querySelector('button[type="submit"]');
   submitBtn.disabled = true;
   submitBtn.textContent = "กำลังบันทึก...";
 
   try {
+    if (!group || !group.id) {
+      throw new Error("ไม่พบข้อมูลกลุ่ม กรุณาลองรีเฟรชหน้าเว็บแล้วเข้าสู่ระบบใหม่");
+    }
+
     const id = $("#taskId").value,
       assignee = $("#taskAssignee").value,
-      members = group.data().members || {},
-      fileInput = $("#taskFileInput"),
-      files = fileInput.files;
-
-    let attachmentUrls = [];
-
-    // อัปโหลดไฟล์แนบไปยัง Firebase Storage (ถ้ามี)
-    if (files.length > 0) {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const fileRef = storageRef(storage, `groups/${group.id}/tasks/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-        attachmentUrls.push({ name: file.name, url: url });
-      }
-    }
+      members = (group.data && group.data().members) || {};
 
     const data = {
       title: $("#taskTitle").value.trim(),
       subject: $("#taskSubject").value.trim(),
-      section: $("#taskSection").value.trim() || "section65001",
+      section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
       due: $("#taskDue").value,
       priority: $("#taskPriority").value,
-      link: $("#taskLink").value.trim(),
+      link: $("#taskLink") ? $("#taskLink").value.trim() : "",
       note: $("#taskNote").value.trim(),
-      assigneeId: assignee,
+      assigneeId: assignee || "",
       assigneeName: members[assignee] || "",
       updatedAt: serverTimestamp(),
       updatedByName: nameOf(),
     };
-
-    // หากมีการแนบไฟล์ใหม่ ให้อัปเดตรายการไฟล์แนบ
-    if (attachmentUrls.length > 0) {
-      data.attachments = arrayUnion(...attachmentUrls);
-    }
 
     if (id) {
       await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
     } else {
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...data,
-        attachments: attachmentUrls,
         status: "todo",
-        createdBy: user.uid,
+        createdBy: user ? user.uid : "",
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
       });
     }
 
     close("taskModal");
+    $("#taskForm").reset();
     toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
+
   } catch (err) {
-    console.error(err);
-    toast("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    console.error("Task Form Error:", err);
+    alert("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"));
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "บันทึกงาน";

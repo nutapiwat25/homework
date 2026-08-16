@@ -268,20 +268,22 @@ function timeAgo(timestamp) {
   return fmt(timestamp.toDate().toISOString().slice(0, 10));
 }
 function renderActivity(activities = []) {
-  if (!activities.length) {
+  if (!activities || !activities.length) {
     // Fallback หากยังไม่มีข้อมูลใน activities collection
-    const items = [...tasks]
-      .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
+    const items = [...(tasks || [])]
+      .sort((a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0))
       .slice(0, 4);
 
     $("#activityList").innerHTML =
       items
         .map(
-          (t) =>
-            `<div class="activity-row">
-              <span>${initials(t.updatedByName || t.createdByName)}</span>
-              <p><b>${esc(t.updatedByName || t.createdByName || "สมาชิก")}</b> ${t.status === "done" ? "ทำเสร็จแล้ว" : "อัปเดตงาน"}<br><small>${esc(t.title)}</small></p>
-            </div>`
+          (t) => {
+            const author = t.updatedByName || t.createdByName || "สมาชิก";
+            return `<div class="activity-row">
+              <span>${initials(author)}</span>
+              <p><b>${esc(author)}</b> ${t.status === "done" ? "ทำเสร็จแล้ว" : "อัปเดตงาน"}<br><small>${esc(t.title || "")}</small></p>
+            </div>`;
+          }
         )
         .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
     return;
@@ -289,14 +291,16 @@ function renderActivity(activities = []) {
 
   $("#activityList").innerHTML = activities
     .map(
-      (a) =>
-        `<div class="activity-row">
-          <span>${initials(a.userName)}</span>
+      (a) => {
+        const author = a.userName || "สมาชิก";
+        return `<div class="activity-row">
+          <span>${initials(author)}</span>
           <p>
-            <b>${esc(a.userName)}</b> ${esc(a.action)}<br>
-            <small>${esc(a.taskTitle)} · ${timeAgo(a.createdAt)}</small>
+            <b>${esc(author)}</b> ${esc(a.action || "")}<br>
+            <small>${esc(a.taskTitle || "")} · ${timeAgo(a.createdAt)}</small>
           </p>
-        </div>`
+        </div>`;
+      }
     )
     .join("");
 }
@@ -369,18 +373,6 @@ function renderDue() {
           `<button class="due-row" data-task="${t.id}"><b>${esc(t.title)}</b><span>${esc(t.subject)} · ${due(t)}</span></button>`,
       )
       .join("") || '<p class="tiny-empty">ยังไม่มีงานค้าง</p>';
-}
-function renderActivity() {
-  const items = [...tasks]
-    .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
-    .slice(0, 4);
-  $("#activityList").innerHTML =
-    items
-      .map(
-        (t) =>
-          `<div class="activity-row"><span>${initials(t.updatedByName || t.createdByName)}</span><p><b>${esc(t.updatedByName || t.createdByName || "สมาชิก")}</b> อัปเดตงาน<br><small>${esc(t.title)}</small></p></div>`,
-      )
-      .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
 }
 function renderCalendar() {
   const year = currCalDate.getFullYear();

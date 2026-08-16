@@ -351,12 +351,16 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  const done = tasks.filter((t) => t.status === "done").length,
+  // งานที่ผู้ใช้ปัจจุบันทำเสร็จแล้ว หรือมีการส่งงานแล้ว
+  const done = tasks.filter((t) => t.completedBy && t.completedBy.length > 0).length,
     urgent = tasks.filter(
       (t) =>
-        t.status !== "done" && daysAway(t.due) >= 0 && daysAway(t.due) <= 3,
+        (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
+        daysAway(t.due) >= 0 &&
+        daysAway(t.due) <= 3,
     ).length,
     pending = tasks.length - done;
+
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
   $("#completedCount").textContent = done;
@@ -495,19 +499,20 @@ function renderCalendar() {
 
     let dotsHtml = "";
     if (dayTasks.length > 0) {
-      const hasDone = dayTasks.some((t) => t.status === "done");
+      const hasDone = dayTasks.some((t) => t.completedBy && t.completedBy.length > 0);
       const hasUrgent = dayTasks.some(
-        (t) => t.status !== "done" && daysAway(t.due) <= 3,
+        (t) => (!t.completedBy || !t.completedBy.includes(user?.uid)) && daysAway(t.due) <= 3,
       );
       const hasNormal = dayTasks.some(
-        (t) => t.status !== "done" && daysAway(t.due) > 3,
+        (t) => (!t.completedBy || !t.completedBy.includes(user?.uid)) && daysAway(t.due) > 3,
       );
 
       if (hasUrgent)
         dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
       if (hasNormal)
-        dotsHtml += `<i class="dot lilac" title="มีงานส่งวันนี้"></i>`;
-      if (hasDone) dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
+        dotsHtml += `<i class="dot lilac" title="มีกำหนดส่ง"></i>`;
+      if (hasDone) 
+        dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
     }
 
     html += `
@@ -530,6 +535,8 @@ function renderCalendar() {
 
 function renderCalendarTasks() {
   let list = [];
+  const members = (group && group.data && group.data().members) || {}; // เพิ่มบรรทัดนี้
+
   if (selectedCalDate) {
     list = tasks.filter((t) => t.due === selectedCalDate);
     $("#selectedDateTitle").textContent = `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
@@ -547,9 +554,11 @@ function renderCalendarTasks() {
           (t) => {
             const completedUids = t.completedBy || [];
             const doneNames = completedUids.map((uid) => members[uid] || "สมาชิก").join(", ");
-            const doneText = doneNames ? `<div class="cal-done-users">✓ ทำแล้ว: ${esc(doneNames)}</div>` : "";
-            return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
-              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
+            const doneText = doneNames ? `<div class="cal-done-users" style="font-size: 11px; color: #44ac82; margin-top: 4px;">✓ ทำแล้ว: ${esc(doneNames)}</div>` : "";
+            const isDoneByMe = completedUids.includes(user.uid);
+
+            return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
+              <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
@@ -557,6 +566,7 @@ function renderCalendarTasks() {
                   <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
+                ${doneText}
               </button>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>

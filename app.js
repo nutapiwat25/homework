@@ -461,7 +461,6 @@ function renderTasks() {
             ? t.completedBy.includes(user.uid)
             : t.status === "done";
 
-          // ข้อความแสดงชื่อผู้ทำเสร็จแล้ว
           let doneUsersHtml = "";
           if (completedNames.length > 0) {
             doneUsersHtml = `<div class="completed-by-text">✓ ทำแล้ว: <span>${completedNames.map((n) => esc(n)).join(", ")}</span></div>`;
@@ -470,9 +469,8 @@ function renderTasks() {
           }
 
           if (currentView === "board") {
-            // หน้าภาพรวมกลุ่ม: ไม่มีปุ่มติ๊ก แสดงข้อความคนทำเสร็จแล้วใต้งาน
             return `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
-              <button class="task-open" data-action="detail">
+              <div class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
@@ -480,24 +478,23 @@ function renderTasks() {
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
                 ${doneUsersHtml}
-              </button>
+              </div>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
               </div>
             </article>`;
           } else {
-            // หน้างานของฉัน: มีปุ่มติ๊กงาน
             return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
-              <button class="task-open" data-action="detail">
+              <div class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
                   <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
-              </button>
+              </div>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
@@ -590,14 +587,14 @@ function renderCalendarTasks() {
           (t) =>
             `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
-              <button class="task-open" data-action="detail">
+              <div class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
                   <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
-              </button>
+              </div>
               <div class="task-actions">
                 <span class="priority-dot ${t.priority}"></span>
                 <button class="edit-task" data-action="edit">✎</button>

@@ -84,7 +84,20 @@ const fmt = (date) =>
     day: "numeric",
     month: "short",
   });
-
+const data = {
+  title: taskTitle,
+  subject: $("#taskSubject").value.trim(),
+  section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
+  due: $("#taskDue").value,
+  priority: $("#taskPriority").value,
+  link: $("#taskLink") ? $("#taskLink").value.trim() : "",
+  note: $("#taskNote").value.trim(),
+  assigneeId: assignee || "",
+  assigneeName: members[assignee] || "",
+  updatedAt: serverTimestamp(),
+  updatedBy: user.uid,
+  updatedByName: nameOf(),
+};
 function toast(text) {
   $("#toastText").textContent = text;
   $("#toast").classList.add("show");
@@ -256,9 +269,9 @@ async function logActivity(action, taskTitle) {
   try {
     await addDoc(collection(db, "groups", group.id, "activities"), {
       userName: nameOf(),
-      userId: user.uid,
+      userId: user.uid, // ระบุ UID ของผู้ทำรายการอย่างชัดเจน
       action: action,
-      taskTitle: taskTitle,
+      taskTitle: taskTitle || "",
       createdAt: serverTimestamp(),
     });
   } catch (err) {
@@ -295,46 +308,21 @@ function renderActivity(activities = currentActivities) {
 
   let html = "";
   if (!activities || !activities.length) {
-    const items = [...(tasks || [])]
-      .sort(
-        (a, b) => (b?.updatedAt?.seconds || 0) - (a?.updatedAt?.seconds || 0),
-      )
-      .slice(0, 5);
-
-    html =
-      items
-        .map((t) => {
-          const author = t.updatedByName || t.createdByName || "สมาชิก";
-          const isDone = t.status === "done";
-          const actionLabel = isDone ? "ทำเสร็จแล้ว" : "อัปเดตงาน";
-          const actionClass = isDone ? "act-done" : "act-update";
-          const timeText = timeAgo(t.updatedAt);
-
-          return `<div class="activity-row">
-            <span class="avatar-sm">${initials(author)}</span>
-            <div class="activity-content">
-              <div class="activity-header">
-                <b>${esc(author)}</b>
-                <span class="act-badge ${actionClass}">${actionLabel}</span>
-              </div>
-              <p class="activity-title">${esc(t.title || "")}</p>
-              <small class="activity-time">◷ ${timeText}</small>
-            </div>
-          </div>`;
-        })
-        .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
+    html = '<p class="tiny-empty">ยังไม่มีประวัติกิจกรรมในกลุ่ม</p>';
   } else {
     html = activities
       .map((a) => {
-        const author = a.userName || "สมาชิก";
+        const isMe = a.userId === user?.uid;
+        const author = a.userName ? `${a.userName}${isMe ? " (คุณ)" : ""}` : "สมาชิก";
         const action = a.action || "อัปเดตงาน";
+        
         let actionClass = "act-update";
         if (action.includes("เสร็จ")) actionClass = "act-done";
         if (action.includes("สร้าง")) actionClass = "act-create";
         if (action.includes("ความเห็น")) actionClass = "act-comment";
 
-        return `<div class="activity-row">
-          <span class="avatar-sm">${initials(author)}</span>
+        return `<div class="activity-row ${isMe ? "is-me" : ""}">
+          <span class="avatar-sm">${initials(a.userName)}</span>
           <div class="activity-content">
             <div class="activity-header">
               <b>${esc(author)}</b>
@@ -683,23 +671,27 @@ function subscribeComments(taskId) {
 
 async function toggleDone(id) {
   const t = tasks.find((x) => x.id === id);
-  if (!t) return;
+  if (!t || !user) return;
 
   const completedBy = t.completedBy || [];
-  const isDoneNow = !completedBy.includes(user.uid);
-  const actionText = isDoneNow ? `${nameOf()} ทำเสร็จแล้ว` : `${nameOf()} เปิดงานอีกครั้ง`;
+  // ตรวจสอบว่าบัญชีปัจจุบันเคยติ๊กงานนี้หรือยัง
+  const isDoneByMe = completedBy.includes(user.uid);
+  const myName = nameOf();
 
   await updateDoc(doc(db, "groups", group.id, "tasks", id), {
-    completedBy: isDoneNow ? arrayUnion(user.uid) : arrayRemove(user.uid),
-    completedByNames: isDoneNow ? arrayUnion(nameOf()) : arrayRemove(nameOf()),
-    status: isDoneNow ? "done" : "todo",
+    completedBy: isDoneByMe ? arrayRemove(user.uid) : arrayUnion(user.uid),
+    completedByNames: isDoneByMe ? arrayRemove(myName) : arrayUnion(myName),
+    // ถ้าสมาชิกทุกคนในกลุ่มทำเสร็จหมดแล้ว ให้เปลี่ยนสถานะหลักเป็น "done"
+    status: (!isDoneByMe && (completedBy.length + 1 >= Object.keys(group.data().members || {}).length)) ? "done" : "todo",
     updatedAt: serverTimestamp(),
-    updatedByName: nameOf(),
+    updatedByName: myName,
   });
 
+  // บันทึก Log กิจกรรมพร้อมระบุ UID ของผู้กระทำ
+  const actionText = !isDoneByMe ? "ทำเสร็จแล้ว" : "เปิดงานอีกครั้ง";
   await logActivity(actionText, t.title);
 
-  toast(isDoneNow ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
+  toast(!isDoneByMe ? "เก่งมาก! งานเสร็จแล้ว" : "ย้ายงานกลับไปที่ต้องทำแล้ว");
   if (selectedTask?.id === id) close("detailModal");
 }
 

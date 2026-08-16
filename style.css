@@ -1511,3 +1511,12 @@ body.dark .cal-day-cell.today {
 body.dark .completed-by-text span {
   color: #dfddec;
 }
+.activity-row.is-me {
+  background: #f4f2ff;
+  border-color: #d9d4ff;
+}
+
+body.dark .activity-row.is-me {
+  background: #343152;
+  border-color: #484469;
+}

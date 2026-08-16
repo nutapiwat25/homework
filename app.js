@@ -25,6 +25,7 @@ import {
   serverTimestamp,
   arrayUnion,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { updateDoc, doc, arrayRemove, arrayUnion } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC7yOpsjoUr2As3bolEyxB6DNQGOj8xNPU",
@@ -113,6 +114,19 @@ document.querySelectorAll(".auth-tab").forEach(
       $("#authError").textContent = "";
     }),
 );
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-action]");
+  if (!btn) return;
+
+  const action = btn.dataset.action;
+  const taskItem = btn.closest(".task-item");
+  const taskId = taskItem ? taskItem.dataset.id : null;
+
+  if (action === "done" && taskId) {
+    e.stopPropagation();
+    await toggleTaskDone(taskId);
+  }
+});
 
 $("#authForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -670,6 +684,29 @@ async function toggleDone(taskId) {
     });
     await logActivity("ทำเสร็จแล้ว", t.title);
     toast("เก่งมาก! ทำงานนี้เสร็จแล้ว");
+  }
+}
+// ตัวอย่างการกดสลับสถานะติ๊กงาน
+async function toggleTaskDone(taskId) {
+  if (!user || !currentGroupId) return;
+
+  const taskRef = doc(db, "groups", currentGroupId, "tasks", taskId);
+  const task = tasks.find((t) => t.id === taskId);
+  if (!task) return;
+
+  const completedBy = task.completedBy || [];
+  const isDone = completedBy.includes(user.uid);
+
+  if (isDone) {
+    // ❌ ถ้านิสัยติ๊กไว้อยู่แล้ว ให้ "ยกเลิกติ๊ก" (เอา UID ออกจาก Array)
+    await updateDoc(taskRef, {
+      completedBy: arrayRemove(user.uid)
+    });
+  } else {
+    // ✓ ถ้ายังไม่ได้ติ๊ก ให้ "ติ๊กทำเสร็จ" (เพิ่ม UID เข้า Array)
+    await updateDoc(taskRef, {
+      completedBy: arrayUnion(user.uid)
+    });
   }
 }
 

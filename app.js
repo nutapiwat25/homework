@@ -434,14 +434,8 @@ async function showDetail(id) {
   if (!selectedTask) return;
   const t = selectedTask;
 
-  // สร้างส่วนแสดงลิงก์ประกอบ
   const linkHtml = t.link
-    ? `<p class="detail-link"><b>🔗 ลิงก์แนบ:</b> <a href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">${esc(t.link)}</a></p>`
-    : "";
-
-  // สร้างส่วนแสดงไฟล์แนบ
-  const filesHtml = t.attachments && t.attachments.length > 0
-    ? `<div class="detail-attachments"><b>📁 ไฟล์แนบ:</b><ul>${t.attachments.map(f => `<li><a href="${esc(f.url)}" target="_blank" download>${esc(f.name)}</a></li>`).join("")}</ul></div>`
+    ? `<p class="detail-link"><b>🔗 ลิงก์ประกอบ:</b> <a href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">${esc(t.link)}</a></p>`
     : "";
 
   $("#taskDetail").innerHTML = `
@@ -452,7 +446,6 @@ async function showDetail(id) {
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
       
       ${linkHtml}
-      ${filesHtml}
 
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
       <button id="detailDone" class="secondary-button">${t.status === "done" ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button>
@@ -461,24 +454,6 @@ async function showDetail(id) {
 
   $("#detailDone").onclick = () => toggleDone(t.id);
   open("detailModal");
-  
-  if (stopComments) stopComments();
-  stopComments = onSnapshot(
-    query(
-      collection(db, "groups", group.id, "tasks", id, "comments"),
-      orderBy("createdAt", "asc")
-    ),
-    (snap) => {
-      $("#commentList").innerHTML =
-        snap.docs
-          .map((d) => {
-            const c = d.data();
-            return `<div class="comment"><span>${esc(initials(c.authorName))}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`;
-          })
-          .join("") ||
-        '<p class="tiny-empty">เริ่มพูดคุยกับเพื่อนเกี่ยวกับงานนี้ได้เลย</p>';
-    }
-  );
 }
 async function toggleDone(id) {
   const t = tasks.find((x) => x.id === id);

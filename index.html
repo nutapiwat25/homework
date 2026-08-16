@@ -261,63 +261,56 @@
           </div>
         </div>
         <!-- ค้นหา <form id="taskForm"> ใน index.html และปรับเปลี่ยนดังนี้ -->
-      <form id="taskForm">
-        <input type="hidden" id="taskId" />
-        
-        <label>ชื่องาน
-          <input required id="taskTitle" maxlength="100" placeholder="เช่น สรุปบทที่ 3" />
-        </label>
-        
-        <div class="form-row">
-          <label>รายวิชา
-            <input required id="taskSubject" maxlength="50" placeholder="เช่น CS101" />
+        <form id="taskForm">
+          <input type="hidden" id="taskId" />
+          
+          <label>ชื่องาน
+            <input required id="taskTitle" maxlength="100" placeholder="เช่น สรุปบทที่ 3" />
           </label>
           
-          <!-- เพิ่มช่อง Section -->
-          <label>Section
-            <input id="taskSection" maxlength="20" placeholder="เช่น section650001" defaultValue="section650001" />
-          </label>
-        </div>
+          <div class="form-row">
+            <label>รายวิชา
+              <input required id="taskSubject" maxlength="50" placeholder="เช่น CS101" />
+            </label>
+            
+            <label>Section
+              <input id="taskSection" maxlength="20" placeholder="เช่น section650001" value="section650001" />
+            </label>
+          </div>
 
-        <div class="form-row">
-          <label>กำหนดส่ง<input required id="taskDue" type="date" /></label>
-          <label>ผู้รับผิดชอบ<select id="taskAssignee"></select></label>
-        </div>
+          <div class="form-row">
+            <label>กำหนดส่ง<input required id="taskDue" type="date" /></label>
+            <label>ผู้รับผิดชอบ<select id="taskAssignee"></select></label>
+          </div>
 
-        <div class="form-row">
-          <label>ความสำคัญ
-            <select id="taskPriority">
-              <option value="high">สำคัญมาก</option>
-              <option value="medium" selected>ปกติ</option>
-              <option value="low">ไม่เร่งด่วน</option>
-            </select>
+          <div class="form-row">
+            <label>ความสำคัญ
+              <select id="taskPriority">
+                <option value="high">สำคัญมาก</option>
+                <option value="medium" selected>ปกติ</option>
+                <option value="low">ไม่เร่งด่วน</option>
+              </select>
+            </label>
+            
+            <label>ลิงก์แนบ (Google Drive / Canva / ฯลฯ)
+              <input id="taskLink" type="url" placeholder="https://drive.google.com/..." />
+            </label>
+          </div>
+
+          <label>รายละเอียดเพิ่มเติม
+            <textarea
+              id="taskNote"
+              rows="3"
+              maxlength="500"
+              placeholder="ใส่รายละเอียดเพิ่มเติม..."
+            ></textarea>
           </label>
           
-          <!-- เพิ่มช่องใส่ลิงก์แนบ -->
-          <label>ลิงก์ประกอบ (URL)
-            <input id="taskLink" type="url" placeholder="https://drive.google.com/..." />
-          </label>
-        </div>
-
-        <!-- เพิ่มช่องอัปโหลดไฟล์แนบ -->
-        <label>แนบไฟล์ประกอบ
-          <input id="taskFileInput" type="file" multiple />
-        </label>
-
-        <label>รายละเอียดเพิ่มเติม
-          <textarea
-            id="taskNote"
-            rows="3"
-            maxlength="500"
-            placeholder="ใส่รายละเอียดเพิ่มเติม..."
-          ></textarea>
-        </label>
-        
-        <div class="modal-actions">
-          <button type="button" class="secondary-button" data-close="taskModal">ยกเลิก</button>
-          <button class="primary-button" type="submit">บันทึกงาน</button>
-        </div>
-      </form>
+          <div class="modal-actions">
+            <button type="button" class="secondary-button" data-close="taskModal">ยกเลิก</button>
+            <button class="primary-button" type="submit">บันทึกงาน</button>
+          </div>
+        </form>
       </section>
     </div>
     <div class="modal-backdrop" id="inviteModal">

@@ -1968,3 +1968,197 @@ body.dark .due-row-title {
 body.dark .activity-title {
   color: #b3b0c2;
 }
+/* ==========================================
+   Right Column Cards Styling (Due & Activity)
+   ========================================== */
+
+/* เพิ่มระยะขอบด้านในของการ์ดขวาให้เท่ากับการ์ดหลัก */
+.due-card,
+.activity-card {
+  padding: 22px;
+}
+
+.mini-heading {
+  margin-bottom: 16px;
+  margin-left: 0;
+  margin-top: 0;
+}
+
+.mini-heading h2 {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* --- การ์ดกำหนดส่งถัดไป (Due List) --- */
+.due-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.due-row {
+  width: 100%;
+  border: 1px solid var(--line, #ecebf2);
+  border-radius: 11px;
+  background: #fff;
+  padding: 11px 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.due-row:hover {
+  background: #fbfaff;
+  border-color: #d8d2ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 88, 232, 0.06);
+}
+
+.due-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+
+.due-row-title {
+  font-size: 12px;
+  color: var(--text, #25243a);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.due-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.due-tag {
+  font-size: 10px;
+  color: #ef7d68;
+  font-weight: 700;
+  background: #fff2ef;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* --- การ์ดกิจกรรมล่าสุด (Activity List) --- */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--line, #ecebf2);
+  border-radius: 11px;
+  transition: all 0.18s ease;
+}
+
+.activity-row:hover {
+  background: #fbfaff;
+  border-color: #d8d2ff;
+}
+
+.avatar-sm {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f4d8a4, #d6ac66);
+  color: #4b3b20;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.activity-header b {
+  font-size: 12px;
+  color: var(--text, #25243a);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.act-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.act-badge.act-update { background: #eef2ff; color: #4f46e5; }
+.act-badge.act-done { background: #ecfdf5; color: #059669; }
+.act-badge.act-create { background: #fef3c7; color: #d97706; }
+.act-badge.act-comment { background: #f3e8ff; color: #9333ea; }
+
+.activity-title {
+  margin: 0;
+  font-size: 11px;
+  color: #646175;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-time {
+  font-size: 10px;
+  color: #a09daf;
+}
+
+/* --- Dark Mode Support --- */
+body.dark .due-row,
+body.dark .activity-row {
+  background: #302f43;
+  border-color: #3b394e;
+}
+
+body.dark .due-row:hover,
+body.dark .activity-row:hover {
+  background: #38364e;
+  border-color: #484565;
+}
+
+body.dark .due-row-title,
+body.dark .activity-header b {
+  color: #f0eff8;
+}
+
+body.dark .due-tag {
+  background: #412f38;
+  color: #f39785;
+}

@@ -393,9 +393,9 @@ function renderDue() {
               <b class="due-row-title">${esc(t.title)}</b>
               <div class="due-row-meta">
                 <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-                <span class="due-tag">◷ ${due(t)}</span>
               </div>
             </div>
+            <span class="due-tag">◷ ${due(t)}</span>
           </button>`,
       )
       .join("") || '<p class="tiny-empty">ยังไม่มีงานค้าง</p>';

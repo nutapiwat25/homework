@@ -682,6 +682,8 @@ body {
 }
 .mini-heading {
   margin-bottom: 17px;
+  margin-top: 3px;
+  margin-left: 3px;
 }
 .mini-heading h2 {
   font-size: 13px;
@@ -1476,7 +1478,7 @@ body.dark .stat-card span {
   border: 0;
   border-radius: 9px;
   background: #faf9fc;
-  padding: 10px;
+  padding: 8px;
   text-align: left;
   cursor: pointer;
 }
@@ -1503,6 +1505,8 @@ body.dark .stat-card span {
   display: flex;
   gap: 8px;
   align-items: flex-start;
+  padding: 8px;
+  border-radius: 9px;
 }
 .activity-row > span {
   display: grid;

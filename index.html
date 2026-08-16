@@ -120,12 +120,13 @@
             </button>
           </section>
 
+          <!-- การ์ด 4 อันด้านบน -->
           <section class="stats">
             <article class="stat-card violet">
               <div class="stat-icon">☷</div>
               <div>
                 <span>งานทั้งหมด</span><strong id="totalCount">0</strong>
-                <small>ในพื้นที่กลุ่ม</small>
+                <small id="statLabel1">ในพื้นที่กลุ่ม</small>
               </div>
             </article>
             <article class="stat-card orange">
@@ -139,14 +140,14 @@
               <div class="stat-icon">✓</div>
               <div>
                 <span>งานเสร็จแล้ว</span><strong id="completedCount">0</strong>
-                <small>ทุกคนช่วยกัน</small>
+                <small id="statLabel3">ทุกคนช่วยกัน</small>
               </div>
             </article>
             <article class="stat-card blue">
               <div class="stat-icon">⌇</div>
               <div>
                 <span>ความคืบหน้า</span><strong id="progressCount">0%</strong>
-                <small>ของทั้งกลุ่ม</small>
+                <small id="statLabel4">ของทั้งกลุ่ม</small>
               </div>
             </article>
           </section>
@@ -155,8 +156,8 @@
             <div class="task-section card-surface">
               <div class="section-heading">
                 <div>
-                  <h2>งานของกลุ่ม</h2>
-                  <p>มอบหมาย ติดตาม และช่วยกันปิดงาน</p>
+                  <h2 id="sectionTitle">งานของกลุ่ม</h2>
+                  <p id="sectionSub">มอบหมาย ติดตาม และช่วยกันปิดงาน</p>
                 </div>
                 <button class="text-button" id="showAllTasks">
                   ดูทั้งหมด →
@@ -181,16 +182,7 @@
             </div>
 
             <aside class="right-column">
-              <section class="card-surface due-card">
-                <div class="mini-heading">
-                  <div>
-                    <h2>กำหนดส่งถัดไป</h2>
-                    <p>เรียงตามวันส่ง</p>
-                  </div>
-                </div>
-                <div id="dueList" class="due-list"></div>
-              </section>
-
+              <!-- นำ due-card ออกแล้ว เหลือเฉพาะกิจกรรมล่าสุด -->
               <section class="card-surface activity-card">
                 <div class="mini-heading">
                   <div>

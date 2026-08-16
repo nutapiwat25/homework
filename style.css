@@ -1486,3 +1486,28 @@ body.dark .cal-day-cell.today {
   border-color: #5fc296;
   color: #fff;
 }
+/* ข้อความใต้งานในหน้าภาพรวมกลุ่ม แสดงรายชื่อคนทำเสร็จแล้ว */
+.completed-by-text {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #3aaf85;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.completed-by-text span {
+  color: #25243a;
+  font-weight: 700;
+}
+
+.completed-by-text.pending {
+  color: #aaa7b5;
+  font-weight: 400;
+  font-size: 10px;
+}
+
+body.dark .completed-by-text span {
+  color: #dfddec;
+}

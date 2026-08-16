@@ -1467,3 +1467,22 @@ body.dark .cal-day-cell.today {
     width: 100%;
   }
 }
+/* สถานะสำหรับหน้าภาพรวมกลุ่ม (ดูได้อย่างเดียว ติ๊กไม่ได้) */
+.check-status-icon {
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  border: 1.5px solid #d6d3df;
+  color: #aaa7b5;
+  background: #f6f5f9;
+  cursor: default;
+}
+
+.task-item.done .check-status-icon {
+  background: #5fc296;
+  border-color: #5fc296;
+  color: #fff;
+}

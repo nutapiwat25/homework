@@ -403,12 +403,23 @@ function due(t) {
 
 function renderTasks() {
   const list = filtered();
+  
+  // เช็คว่าปัจจุบันสลับไปอยู่ view ไหน หรือใช้ filter อะไรอยู่
+  const isReadOnlyView = activeFilter === "all"; 
+
   $("#taskList").innerHTML = list.length
     ? list
         .map(
           (t) =>
             `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}">
-              <button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>
+              <!-- ซ่อนหรือปิดปุ่มเช็คถ้าอยู่ในหน้าภาพรวมกลุ่ม (ReadOnly) -->
+              ${
+                isReadOnlyView
+                  ? `<span class="check-status-icon" title="${t.status === "done" ? "ทำเสร็จแล้ว" : "ยังไม่เสร็จ"}">
+                      ${t.status === "done" ? "✓" : "○"}
+                     </span>`
+                  : `<button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button>`
+              }
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">

@@ -1,0 +1,500 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  serverTimestamp,
+  arrayUnion,
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC7yOpsjoUr2As3bolEyxB6DNQGOj8xNPU",
+  authDomain: "homework-ac523.firebaseapp.com",
+  projectId: "homework-ac523",
+  storageBucket: "homework-ac523.firebasestorage.app",
+  messagingSenderId: "1078534206598",
+  appId: "1:1078534206598:web:0cc8b1334851c3cc4f8d07",
+};
+const app = initializeApp(firebaseConfig),
+  auth = getAuth(app),
+  db = getFirestore(app);
+const $ = (s) => document.querySelector(s),
+  esc = (s) =>
+    String(s || "").replace(
+      /[&<>'"]/g,
+      (c) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "'": "&#39;",
+          '"': "&quot;",
+        })[c],
+    );
+let user,
+  group,
+  tasks = [],
+  activeFilter = "all",
+  selectedTask,
+  stopTasks,
+  stopComments,
+  stopGroups,
+  toastTimer,
+  registerMode = false;
+const today = () => new Date().toISOString().slice(0, 10);
+const nameOf = () =>
+  user?.displayName || user?.email?.split("@")[0] || "เพื่อน";
+const initials = (n) => (n || "?").trim().slice(0, 1).toUpperCase();
+const code = () => Math.random().toString(36).slice(2, 8).toUpperCase();
+const daysAway = (date) =>
+  Math.round(
+    (new Date(`${date}T12:00`) - new Date(`${today()}T12:00`)) / 864e5,
+  );
+const fmt = (date) =>
+  new Date(`${date}T12:00`).toLocaleDateString("th-TH", {
+    day: "numeric",
+    month: "short",
+  });
+function toast(text) {
+  $("#toastText").textContent = text;
+  $("#toast").classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2600);
+}
+function open(id) {
+  $(`#${id}`).classList.add("open");
+}
+function close(id) {
+  $(`#${id}`).classList.remove("open");
+}
+
+document.querySelectorAll(".auth-tab").forEach(
+  (b) =>
+    (b.onclick = () => {
+      registerMode = b.dataset.auth === "signup";
+      document
+        .querySelectorAll(".auth-tab")
+        .forEach((x) => x.classList.toggle("active", x === b));
+      $(".name-field").classList.toggle("hidden", !registerMode);
+      $("#displayName").required = registerMode;
+      $("#authSubmit").textContent = registerMode
+        ? "สร้างบัญชีและเริ่มกลุ่ม"
+        : "เข้าสู่ระบบ";
+      $("#authError").textContent = "";
+    }),
+);
+$("#authForm").onsubmit = async (e) => {
+  e.preventDefault();
+  $("#authError").textContent = "";
+  try {
+    if (registerMode) {
+      const r = await createUserWithEmailAndPassword(
+        auth,
+        $("#email").value,
+        $("#password").value,
+      );
+      await updateProfile(r.user, {
+        displayName: $("#displayName").value.trim(),
+      });
+    } else
+      await signInWithEmailAndPassword(
+        auth,
+        $("#email").value,
+        $("#password").value,
+      );
+  } catch (e) {
+    $("#authError").textContent =
+      {
+        "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+        "auth/email-already-in-use": "อีเมลนี้ถูกใช้งานแล้ว",
+        "auth/weak-password": "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร",
+      }[e.code] || "เข้าสู่ระบบไม่สำเร็จ โปรดลองใหม่";
+  }
+};
+
+onAuthStateChanged(auth, async (u) => {
+  user = u;
+  if (!u) {
+    $("#authScreen").classList.remove("hidden");
+    $("#appShell").classList.add("hidden");
+    if (stopTasks) stopTasks();
+    return;
+  }
+  $("#authScreen").classList.add("hidden");
+  $("#appShell").classList.remove("hidden");
+  $("#profileName").textContent = nameOf();
+  $("#welcomeName").textContent = nameOf();
+  ["profileAvatar", "topAvatar"].forEach(
+    (id) => ($("#" + id).textContent = initials(nameOf())),
+  );
+  await loadGroups();
+});
+async function loadGroups() {
+  if (stopGroups) stopGroups();
+  const q = query(
+    collection(db, "groups"),
+    where("memberIds", "array-contains", user.uid),
+  );
+  stopGroups = onSnapshot(q, async (snap) => {
+    if (snap.empty) {
+      await createGroup();
+      return;
+    }
+    const preferred = localStorage.getItem("homie-group");
+    group = snap.docs.find((d) => d.id === preferred) || snap.docs[0];
+    localStorage.setItem("homie-group", group.id);
+    renderGroup();
+    subscribeTasks();
+  });
+}
+async function createGroup() {
+  const inviteCode = code(),
+    data = {
+      name: `กลุ่มของ ${nameOf()}`,
+      inviteCode,
+      memberIds: [user.uid],
+      members: { [user.uid]: nameOf() },
+      createdBy: user.uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+  const ref = await addDoc(collection(db, "groups"), data);
+  await setDoc(doc(db, "invites", inviteCode), {
+    groupId: ref.id,
+    createdAt: serverTimestamp(),
+  });
+  localStorage.setItem("homie-group", ref.id);
+}
+function renderGroup() {
+  const data = group.data();
+  $("#groupNameSide").textContent = data.name;
+  $("#groupNameHeader").textContent = data.name;
+  $("#groupInitial").textContent = initials(data.name);
+  $("#inviteCode").textContent = data.inviteCode;
+  const members = Object.entries(data.members || {});
+  $("#memberAvatars").innerHTML =
+    members
+      .slice(0, 5)
+      .map(([id, n]) => `<span title="${esc(n)}">${esc(initials(n))}</span>`)
+      .join("") + (members.length > 5 ? `<i>+${members.length - 5}</i>` : "");
+  $("#taskAssignee").innerHTML =
+    `<option value="">ยังไม่มอบหมาย</option>${members.map(([id, n]) => `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`).join("")}`;
+}
+function subscribeTasks() {
+  if (stopTasks) stopTasks();
+  stopTasks = onSnapshot(
+    query(collection(db, "groups", group.id, "tasks"), orderBy("due", "asc")),
+    (snap) => {
+      tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      render();
+    },
+  );
+}
+function render() {
+  const done = tasks.filter((t) => t.status === "done").length,
+    urgent = tasks.filter(
+      (t) =>
+        t.status !== "done" && daysAway(t.due) >= 0 && daysAway(t.due) <= 3,
+    ).length,
+    pending = tasks.length - done;
+  $("#totalCount").textContent = tasks.length;
+  $("#urgentCount").textContent = urgent;
+  $("#completedCount").textContent = done;
+  $("#progressCount").textContent = tasks.length
+    ? `${Math.round((done / tasks.length) * 100)}%`
+    : "0%";
+  $("#sidebarTaskCount").textContent = pending;
+  $("#motivation").textContent = pending
+    ? `ยังมี ${pending} งานที่กลุ่มช่วยกันจัดการได้`
+    : "เคลียร์ทุกงานแล้ว เยี่ยมมากทั้งกลุ่ม!";
+  renderTasks();
+  renderDue();
+  renderActivity();
+}
+function filtered() {
+  const term = $("#searchInput").value.toLowerCase();
+  return tasks.filter((t) => {
+    const ok =
+      activeFilter === "all" ||
+      (activeFilter === "mine" && t.assigneeId === user.uid) ||
+      (activeFilter === "week" &&
+        daysAway(t.due) >= 0 &&
+        daysAway(t.due) <= 7) ||
+      (activeFilter === "done" && t.status === "done");
+    return (
+      ok &&
+      `${t.title} ${t.subject} ${t.note || ""}`.toLowerCase().includes(term)
+    );
+  });
+}
+function due(t) {
+  const d = daysAway(t.due);
+  return d === 0
+    ? "วันนี้"
+    : d === 1
+      ? "พรุ่งนี้"
+      : d < 0
+        ? `เลยกำหนด ${-d} วัน`
+        : fmt(t.due);
+}
+function renderTasks() {
+  const list = filtered();
+  $("#taskList").innerHTML = list.length
+    ? list
+        .map(
+          (t) =>
+            `<article class="task-item ${t.status === "done" ? "done" : ""}" data-id="${t.id}"><button class="check-button" data-action="done">${t.status === "done" ? "✓" : ""}</button><button class="task-open" data-action="detail"><span class="task-title">${esc(t.title)}</span><span class="task-meta"><span class="subject-pill subject-cs">${esc(t.subject)}</span><span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span><span class="due-date">◷ ${due(t)}</span></span></button><div class="task-actions"><span class="priority-dot ${t.priority}"></span><button class="edit-task" data-action="edit">✎</button></div></article>`,
+        )
+        .join("")
+    : '<div class="empty-list"><span>☁</span>ยังไม่มีงานในรายการนี้<br>เพิ่มงานแรกให้กลุ่มกันเลย</div>';
+}
+function renderDue() {
+  $("#dueList").innerHTML =
+    tasks
+      .filter((t) => t.status !== "done")
+      .slice(0, 4)
+      .map(
+        (t) =>
+          `<button class="due-row" data-task="${t.id}"><b>${esc(t.title)}</b><span>${esc(t.subject)} · ${due(t)}</span></button>`,
+      )
+      .join("") || '<p class="tiny-empty">ยังไม่มีงานค้าง</p>';
+}
+function renderActivity() {
+  const items = [...tasks]
+    .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
+    .slice(0, 4);
+  $("#activityList").innerHTML =
+    items
+      .map(
+        (t) =>
+          `<div class="activity-row"><span>${initials(t.updatedByName || t.createdByName)}</span><p><b>${esc(t.updatedByName || t.createdByName || "สมาชิก")}</b> อัปเดตงาน<br><small>${esc(t.title)}</small></p></div>`,
+      )
+      .join("") || '<p class="tiny-empty">รอกิจกรรมแรกของกลุ่ม</p>';
+}
+function openTask(id) {
+  const t = tasks.find((x) => x.id === id);
+  if (!t) return;
+  $("#taskForm").reset();
+  $("#taskId").value = t?.id || "";
+  $("#taskModalTitle").textContent = t ? "แก้ไขงาน" : "เพิ่มงานใหม่";
+  if (t) {
+    $("#taskTitle").value = t.title;
+    $("#taskSubject").value = t.subject;
+    $("#taskDue").value = t.due;
+    $("#taskAssignee").value = t.assigneeId || "";
+    $("#taskPriority").value = t.priority;
+    $("#taskNote").value = t.note || "";
+  } else $("#taskDue").value = today();
+  open("taskModal");
+}
+async function showDetail(id) {
+  selectedTask = tasks.find((t) => t.id === id);
+  if (!selectedTask) return;
+  const t = selectedTask;
+  $("#taskDetail").innerHTML =
+    `<div class="detail-head"><span class="subject-pill subject-cs">${esc(t.subject)}</span><h2>${esc(t.title)}</h2><p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p><div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div><button id="detailDone" class="secondary-button">${t.status === "done" ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button></div>`;
+  $("#detailDone").onclick = () => toggleDone(t.id);
+  open("detailModal");
+  if (stopComments) stopComments();
+  stopComments = onSnapshot(
+    query(
+      collection(db, "groups", group.id, "tasks", id, "comments"),
+      orderBy("createdAt", "asc"),
+    ),
+    (snap) => {
+      $("#commentList").innerHTML =
+        snap.docs
+          .map((d) => {
+            const c = d.data();
+            return `<div class="comment"><span>${esc(initials(c.authorName))}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`;
+          })
+          .join("") ||
+        '<p class="tiny-empty">เริ่มพูดคุยกับเพื่อนเกี่ยวกับงานนี้ได้เลย</p>';
+    },
+  );
+}
+async function toggleDone(id) {
+  const t = tasks.find((x) => x.id === id);
+  await updateDoc(doc(db, "groups", group.id, "tasks", id), {
+    status: t.status === "done" ? "todo" : "done",
+    updatedAt: serverTimestamp(),
+    updatedByName: nameOf(),
+  });
+  toast(
+    t.status === "done"
+      ? "ย้ายงานกลับไปที่ต้องทำแล้ว"
+      : "เก่งมาก! งานเสร็จแล้ว",
+  );
+  if (selectedTask?.id === id) close("detailModal");
+}
+$("#taskForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const id = $("#taskId").value,
+    assignee = $("#taskAssignee").value,
+    members = group.data().members || {},
+    data = {
+      title: $("#taskTitle").value.trim(),
+      subject: $("#taskSubject").value.trim(),
+      due: $("#taskDue").value,
+      priority: $("#taskPriority").value,
+      note: $("#taskNote").value.trim(),
+      assigneeId: assignee,
+      assigneeName: members[assignee] || "",
+      updatedAt: serverTimestamp(),
+      updatedByName: nameOf(),
+    };
+  if (id) await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
+  else
+    await addDoc(collection(db, "groups", group.id, "tasks"), {
+      ...data,
+      status: "todo",
+      createdBy: user.uid,
+      createdByName: nameOf(),
+      createdAt: serverTimestamp(),
+    });
+  close("taskModal");
+  toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
+};
+$("#commentForm").onsubmit = async (e) => {
+  e.preventDefault();
+  if (!selectedTask) return;
+  const text = $("#commentInput").value.trim();
+  if (!text) return;
+  await addDoc(
+    collection(db, "groups", group.id, "tasks", selectedTask.id, "comments"),
+    {
+      text,
+      authorId: user.uid,
+      authorName: nameOf(),
+      createdAt: serverTimestamp(),
+    },
+  );
+  $("#commentInput").value = "";
+};
+$("#taskList").onclick = (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const id = b.closest(".task-item").dataset.id;
+  if (b.dataset.action === "done") toggleDone(id);
+  if (b.dataset.action === "edit") openTask(id);
+  if (b.dataset.action === "detail") showDetail(id);
+};
+$("#dueList").onclick = (e) => {
+  const row = e.target.closest("[data-task]");
+  if (row) showDetail(row.dataset.task);
+};
+["newTaskButton", "addInlineButton"].forEach(
+  (id) => ($("#" + id).onclick = () => openTask()),
+);
+$("#showAllTasks").onclick = () => {
+  activeFilter = "all";
+  renderTasks();
+};
+document.querySelectorAll(".filter-tab").forEach(
+  (b) =>
+    (b.onclick = () => {
+      activeFilter = b.dataset.filter;
+      document
+        .querySelectorAll(".filter-tab")
+        .forEach((x) => x.classList.toggle("active", x === b));
+      renderTasks();
+    }),
+);
+$("#searchInput").oninput = renderTasks;
+$("#inviteButton").onclick = () => open("inviteModal");
+$("#groupSwitcher").onclick = () => open("inviteModal");
+$("#copyInvite").onclick = async () => {
+  await navigator.clipboard.writeText(group.data().inviteCode);
+  toast("คัดลอกรหัสเชิญแล้ว");
+};
+$("#joinForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const c = $("#joinCode").value.trim().toUpperCase();
+  $("#joinError").textContent = "";
+  try {
+    const invite = await getDoc(doc(db, "invites", c));
+    if (!invite.exists()) throw Error();
+    const g = invite.data().groupId;
+    await updateDoc(doc(db, "groups", g), {
+      memberIds: arrayUnion(user.uid),
+      [`members.${user.uid}`]: nameOf(),
+      lastJoinCode: c,
+      updatedAt: serverTimestamp(),
+    });
+    localStorage.setItem("homie-group", g);
+    close("inviteModal");
+    toast("เข้าร่วมกลุ่มสำเร็จแล้ว");
+  } catch {
+    $("#joinError").textContent =
+      "ไม่พบรหัสเชิญนี้ หรือคุณยังไม่มีสิทธิ์เข้าร่วม";
+  }
+};
+document
+  .querySelectorAll("[data-close]")
+  .forEach((b) => (b.onclick = () => close(b.dataset.close)));
+document.querySelectorAll(".modal-backdrop").forEach(
+  (m) =>
+    (m.onclick = (e) => {
+      if (e.target === m) close(m.id);
+    }),
+);
+document.querySelectorAll(".nav-item").forEach(
+  (b) =>
+    (b.onclick = () => {
+      const v = b.dataset.view;
+      document
+        .querySelectorAll(".nav-item")
+        .forEach((x) => x.classList.toggle("active", x === b));
+      $("#viewTitle").textContent = {
+        board: "ภาพรวม",
+        tasks: "งานทั้งหมด",
+        calendar: "ปฏิทิน",
+        activity: "กิจกรรม",
+      }[v];
+      $("#boardView").classList.toggle(
+        "hidden",
+        !["board", "tasks"].includes(v),
+      );
+      $("#calendarView").classList.toggle("hidden", v !== "calendar");
+      $("#activityView").classList.toggle("hidden", v !== "activity");
+      if (v === "tasks") {
+        activeFilter = "all";
+        renderTasks();
+      }
+      $("#sidebar").classList.remove("open");
+    }),
+);
+$("#logoutButton").onclick = () => signOut(auth);
+$("#mobileMenu").onclick = () => $("#sidebar").classList.toggle("open");
+$("#themeToggle").onclick = () => {
+  document.body.classList.toggle("dark");
+  $("#themeToggle").textContent = document.body.classList.contains("dark")
+    ? "☀"
+    : "☾";
+};
+$("#openMembers").onclick = () =>
+  toast(`กลุ่มนี้มี ${Object.keys(group.data().members || {}).length} สมาชิก`);
+$("#todayLabel").textContent = new Intl.DateTimeFormat("th-TH", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+}).format(new Date());

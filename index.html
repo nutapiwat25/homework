@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#6658e8" />
+    <title>homie. — งานกลุ่มมหาลัย</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <section class="auth-screen" id="authScreen">
+      <div class="auth-card">
+        <div class="brand auth-brand">
+          <div class="brand-mark"><span></span><span></span><span></span></div>
+          <span>homie<span class="brand-dot">.</span></span>
+        </div>
+        <p class="auth-kicker">STUDY TOGETHER, STAY ON TRACK</p>
+        <h1>จดงานด้วยกัน<br />ไม่พลาดทุกกำหนดส่ง</h1>
+        <p class="auth-copy">
+          สร้างพื้นที่เรียนของกลุ่ม แชร์งาน มอบหมายงาน
+          และคุยรายละเอียดในที่เดียว
+        </p>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth="login">เข้าสู่ระบบ</button
+          ><button class="auth-tab" data-auth="signup">สมัครใช้งาน</button>
+        </div>
+        <form id="authForm">
+          <label class="name-field hidden"
+            >ชื่อที่แสดง<input
+              id="displayName"
+              maxlength="32"
+              placeholder="เช่น มายด์ CS66" /></label
+          ><label
+            >อีเมลมหาวิทยาลัย<input
+              id="email"
+              type="email"
+              required
+              placeholder="you@university.ac.th" /></label
+          ><label
+            >รหัสผ่าน<input
+              id="password"
+              type="password"
+              required
+              minlength="6"
+              placeholder="อย่างน้อย 6 ตัวอักษร"
+          /></label>
+          <p class="form-error" id="authError"></p>
+          <button class="primary-button full" type="submit" id="authSubmit">
+            เข้าสู่ระบบ
+          </button>
+        </form>
+        <p class="auth-note">ข้อมูลกลุ่มเห็นได้เฉพาะสมาชิกที่ได้รับเชิญ</p>
+      </div>
+    </section>
+    <div class="app-shell hidden" id="appShell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-mark"><span></span><span></span><span></span></div>
+          <span>homie<span class="brand-dot">.</span></span>
+        </div>
+        <button class="group-switcher" id="groupSwitcher">
+          <span class="group-initial" id="groupInitial">S</span
+          ><span
+            ><small>พื้นที่กลุ่ม</small
+            ><strong id="groupNameSide">กำลังโหลด...</strong></span
+          ><b>⌄</b>
+        </button>
+        <nav class="nav">
+          <button class="nav-item active" data-view="board">
+            <span class="nav-icon">⌂</span>ภาพรวม</button
+          ><button class="nav-item" data-view="tasks">
+            <span class="nav-icon">☑</span>งานทั้งหมด
+            <span class="nav-count" id="sidebarTaskCount">0</span></button
+          ><button class="nav-item" data-view="calendar">
+            <span class="nav-icon">▦</span>ปฏิทิน</button
+          ><button class="nav-item" data-view="activity">
+            <span class="nav-icon">◌</span>กิจกรรม
+          </button>
+        </nav>
+        <div class="sidebar-footer">
+          <div class="member-preview">
+            <small>สมาชิกในกลุ่ม</small>
+            <div class="avatar-stack" id="memberAvatars"></div>
+            <button id="openMembers">ดูสมาชิกทั้งหมด →</button>
+          </div>
+          <button class="profile-button" id="logoutButton">
+            <span class="avatar" id="profileAvatar">P</span
+            ><span
+              ><strong id="profileName">กำลังโหลด</strong
+              ><small>ออกจากระบบ</small></span
+            ><span class="more">↗</span>
+          </button>
+        </div>
+      </aside>
+      <main class="main-content">
+        <header class="topbar">
+          <button class="mobile-menu" id="mobileMenu">☰</button>
+          <div class="crumbs">
+            <span id="groupNameHeader">กลุ่มของฉัน</span><b>/</b
+            ><strong id="viewTitle">ภาพรวม</strong>
+          </div>
+          <div class="topbar-actions">
+            <button class="invite-button" id="inviteButton">♧ ชวนเพื่อน</button
+            ><button class="icon-button" id="themeToggle">☾</button
+            ><span class="top-avatar" id="topAvatar">P</span>
+          </div>
+        </header>
+        <section class="page" id="boardView">
+          <section class="welcome">
+            <div>
+              <p class="eyebrow" id="todayLabel"></p>
+              <h1>สวัสดี, <span id="welcomeName">เพื่อน</span> <b>✦</b></h1>
+              <p class="subline" id="motivation">กำลังซิงก์งานของกลุ่ม...</p>
+            </div>
+            <button class="primary-button" id="newTaskButton">
+              <span>＋</span> เพิ่มงานใหม่
+            </button>
+          </section>
+          <section class="stats">
+            <article class="stat-card violet">
+              <div class="stat-icon">☷</div>
+              <div>
+                <span>งานทั้งหมด</span><strong id="totalCount">0</strong
+                ><small>ในพื้นที่กลุ่ม</small>
+              </div>
+            </article>
+            <article class="stat-card orange">
+              <div class="stat-icon">◷</div>
+              <div>
+                <span>ใกล้ถึงกำหนด</span><strong id="urgentCount">0</strong
+                ><small>ภายใน 3 วัน</small>
+              </div>
+            </article>
+            <article class="stat-card green">
+              <div class="stat-icon">✓</div>
+              <div>
+                <span>งานเสร็จแล้ว</span><strong id="completedCount">0</strong
+                ><small>ทุกคนช่วยกัน</small>
+              </div>
+            </article>
+            <article class="stat-card blue">
+              <div class="stat-icon">⌇</div>
+              <div>
+                <span>ความคืบหน้า</span><strong id="progressCount">0%</strong
+                ><small>ของทั้งกลุ่ม</small>
+              </div>
+            </article>
+          </section>
+          <section class="workspace">
+            <div class="task-section card-surface">
+              <div class="section-heading">
+                <div>
+                  <h2>งานของกลุ่ม</h2>
+                  <p>มอบหมาย ติดตาม และช่วยกันปิดงาน</p>
+                </div>
+                <button class="text-button" id="showAllTasks">
+                  ดูทั้งหมด →
+                </button>
+              </div>
+              <div class="toolbar">
+                <div class="filter-tabs">
+                  <button class="filter-tab active" data-filter="all">
+                    ทั้งหมด</button
+                  ><button class="filter-tab" data-filter="mine">
+                    รับผิดชอบฉัน</button
+                  ><button class="filter-tab" data-filter="week">
+                    สัปดาห์นี้</button
+                  ><button class="filter-tab" data-filter="done">
+                    เสร็จแล้ว
+                  </button>
+                </div>
+                <label class="search-box"
+                  ><span>⌕</span
+                  ><input
+                    id="searchInput"
+                    type="search"
+                    placeholder="ค้นหางาน..."
+                /></label>
+              </div>
+              <div class="task-list" id="taskList"></div>
+              <button class="add-inline" id="addInlineButton">
+                <span>＋</span> เพิ่มงานใหม่
+              </button>
+            </div>
+            <aside class="right-column">
+              <section class="card-surface due-card">
+                <div class="mini-heading">
+                  <div>
+                    <h2>กำหนดส่งถัดไป</h2>
+                    <p>เรียงตามวันส่ง</p>
+                  </div>
+                </div>
+                <div id="dueList" class="due-list"></div>
+              </section>
+              <section class="card-surface activity-card">
+                <div class="mini-heading">
+                  <div>
+                    <h2>กิจกรรมล่าสุด</h2>
+                    <p>สิ่งที่เพื่อนในกลุ่มทำ</p>
+                  </div>
+                </div>
+                <div id="activityList" class="activity-list"></div>
+              </section>
+            </aside>
+          </section>
+        </section>
+        <section class="page hidden" id="calendarView">
+          <div class="blank-page">
+            <span>▦</span>
+            <h1>ปฏิทินกำลังพัฒนา</h1>
+            <p>กำหนดส่งทุกงานยังแสดงในหน้า Overview</p>
+          </div>
+        </section>
+        <section class="page hidden" id="activityView">
+          <div class="blank-page">
+            <span>◌</span>
+            <h1>กิจกรรมกลุ่ม</h1>
+            <p>ดูรายการอัปเดตล่าสุดได้ที่หน้าภาพรวม</p>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="modal-backdrop" id="taskModal">
+      <section class="task-modal" role="dialog">
+        <button class="close-modal" data-close="taskModal">×</button>
+        <div class="modal-title">
+          <span class="modal-symbol">✦</span>
+          <div>
+            <p>งานของกลุ่ม</p>
+            <h2 id="taskModalTitle">เพิ่มงานใหม่</h2>
+          </div>
+        </div>
+        <form id="taskForm">
+          <input type="hidden" id="taskId" /><label
+            >ชื่องาน<input
+              required
+              id="taskTitle"
+              maxlength="100"
+              placeholder="เช่น สรุปบทที่ 3"
+          /></label>
+          <div class="form-row">
+            <label
+              >รายวิชา<input
+                required
+                id="taskSubject"
+                maxlength="50"
+                placeholder="เช่น CS101" /></label
+            ><label>กำหนดส่ง<input required id="taskDue" type="date" /></label>
+          </div>
+          <div class="form-row">
+            <label>ผู้รับผิดชอบ<select id="taskAssignee"></select></label
+            ><label
+              >ความสำคัญ<select id="taskPriority">
+                <option value="high">สำคัญมาก</option>
+                <option value="medium" selected>ปกติ</option>
+                <option value="low">ไม่เร่งด่วน</option>
+              </select></label
+            >
+          </div>
+          <label
+            >รายละเอียด / ลิงก์เอกสาร<textarea
+              id="taskNote"
+              rows="3"
+              maxlength="500"
+              placeholder="ใส่รายละเอียด หรือลิงก์ Google Drive ได้"
+            ></textarea>
+          </label>
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="secondary-button"
+              data-close="taskModal"
+            >
+              ยกเลิก</button
+            ><button class="primary-button" type="submit">บันทึกงาน</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="inviteModal">
+      <section class="task-modal compact-modal" role="dialog">
+        <button class="close-modal" data-close="inviteModal">×</button>
+        <div class="modal-title">
+          <span class="modal-symbol">♧</span>
+          <div>
+            <p>ชวนเพื่อนเข้ากลุ่ม</p>
+            <h2>รหัสเชิญของคุณ</h2>
+          </div>
+        </div>
+        <p class="modal-copy">
+          ส่งรหัสนี้ให้เพื่อน แล้วให้เพื่อนเข้าสู่ระบบและกรอกรหัสเพื่อร่วมกลุ่ม
+        </p>
+        <div class="invite-code" id="inviteCode">------</div>
+        <button class="primary-button full" id="copyInvite">
+          คัดลอกรหัสเชิญ
+        </button>
+        <hr />
+        <h3>เข้าร่วมกลุ่มด้วยรหัส</h3>
+        <form id="joinForm" class="join-form">
+          <input id="joinCode" maxlength="6" placeholder="เช่น A1B2C3" /><button
+            class="secondary-button"
+          >
+            เข้าร่วม
+          </button>
+        </form>
+        <p class="form-error" id="joinError"></p>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="detailModal">
+      <section class="task-modal" role="dialog">
+        <button class="close-modal" data-close="detailModal">×</button>
+        <div id="taskDetail"></div>
+        <div class="comments">
+          <h3>ความคิดเห็น</h3>
+          <div id="commentList"></div>
+          <form id="commentForm" class="comment-form">
+            <input
+              id="commentInput"
+              maxlength="300"
+              placeholder="เขียนความเห็นถึงเพื่อน..."
+              required
+            /><button class="primary-button">ส่ง</button>
+          </form>
+        </div>
+      </section>
+    </div>
+    <div class="toast" id="toast">
+      <span>✓</span>
+      <p id="toastText">บันทึกแล้ว</p>
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

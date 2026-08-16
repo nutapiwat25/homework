@@ -179,12 +179,14 @@ async function createGroup() {
   const ref = await addDoc(collection(db, "groups"), data);
   await setDoc(doc(db, "invites", inviteCode), {
     groupId: ref.id,
+    createdBy: user.uid,
     createdAt: serverTimestamp(),
   });
   localStorage.setItem("homie-group", ref.id);
 }
 function renderGroup() {
   const data = group.data();
+  ensureInvite(data);
   $("#groupNameSide").textContent = data.name;
   $("#groupNameHeader").textContent = data.name;
   $("#groupInitial").textContent = initials(data.name);
@@ -197,6 +199,21 @@ function renderGroup() {
       .join("") + (members.length > 5 ? `<i>+${members.length - 5}</i>` : "");
   $("#taskAssignee").innerHTML =
     `<option value="">ยังไม่มอบหมาย</option>${members.map(([id, n]) => `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`).join("")}`;
+}
+async function ensureInvite(data) {
+  if (data.createdBy !== user.uid || !data.inviteCode) return;
+  const inviteRef = doc(db, "invites", data.inviteCode);
+  try {
+    if (!(await getDoc(inviteRef)).exists()) {
+      await setDoc(inviteRef, {
+        groupId: group.id,
+        createdBy: user.uid,
+        createdAt: serverTimestamp(),
+      });
+    }
+  } catch (error) {
+    console.warn("Invite setup requires the latest Firestore rules.", error.code);
+  }
 }
 function subscribeTasks() {
   if (stopTasks) stopTasks();
@@ -431,7 +448,11 @@ $("#joinForm").onsubmit = async (e) => {
   $("#joinError").textContent = "";
   try {
     const invite = await getDoc(doc(db, "invites", c));
-    if (!invite.exists()) throw Error();
+    if (!invite.exists()) {
+      $("#joinError").textContent =
+        "ไม่พบรหัสเชิญนี้ กรุณาตรวจสอบ 6 ตัวอักษรอีกครั้ง";
+      return;
+    }
     const g = invite.data().groupId;
     await updateDoc(doc(db, "groups", g), {
       memberIds: arrayUnion(user.uid),
@@ -442,9 +463,11 @@ $("#joinForm").onsubmit = async (e) => {
     localStorage.setItem("homie-group", g);
     close("inviteModal");
     toast("เข้าร่วมกลุ่มสำเร็จแล้ว");
-  } catch {
+  } catch (error) {
     $("#joinError").textContent =
-      "ไม่พบรหัสเชิญนี้ หรือคุณยังไม่มีสิทธิ์เข้าร่วม";
+      error.code === "permission-denied"
+        ? "กลุ่มยังไม่ได้อัปเดตกฎ Firestore โปรดให้เจ้าของกลุ่ม Publish กฎล่าสุด"
+        : "เข้าร่วมกลุ่มไม่สำเร็จ โปรดลองใหม่";
   }
 };
 document

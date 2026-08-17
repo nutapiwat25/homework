@@ -57,7 +57,7 @@ body {
 /* Sidebar & Navigation */
 .sidebar {
   width: 244px;
-  height: 100dvh; /* ใช้ 100dvh (Dynamic Viewport Height) ป้องกันปัญหา UI ของเบราว์เซอร์บังด้านล่าง */
+  height: 100dvh; /* เปลี่ยนจาก 100vh เป็น 100dvh เพื่อรองรับ Address Bar ของ iPad/ Safari */
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 30;
@@ -65,9 +65,9 @@ body {
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 20px 16px; /* ลด padding บน-ล่าง ลงเล็กน้อย */
-  overflow-y: auto;   /* ให้รองรับการเลื่อนลงได้หากเนื้อหายาวเกินหน้าจอ */
-  -webkit-overflow-scrolling: touch; /* ให้เลื่อนได้อย่างลื่นไหลบน iOS/iPadOS */
+  padding: 20px 16px;
+  overflow-y: auto;   /* เพิ่มบรรทัดนี้: อนุญาตให้เลื่อน Scroll ลงได้เมื่อจอเตี้ยเกินไป */
+  -webkit-overflow-scrolling: touch; /* ปรับให้ Scroll ได้ลื่นบน iOS/iPadOS */
   transition: transform 0.25s ease-in-out;
 }
 
@@ -198,9 +198,9 @@ body {
 }
 
 .sidebar-footer {
-  margin-top: auto; /* ดันส่วนล่างสุดไปอยู่ที่ฐานเสมอ */
-  flex-shrink: 0;   /* ป้องกันปุ่ม Profile/Logout ถูกบีบอัดจนกดไม่ได้ */
-  padding-top: 16px;
+  margin-top: auto; /* ดันลงมาล่างสุดเสมอ */
+  flex-shrink: 0;   /* เพิ่มบรรทัดนี้: ป้องกันไม่ให้ส่วนล่างโดนบีบจนมองไม่เห็น */
+  padding-bottom: max(16px, env(safe-area-inset-bottom)); /* รองรับขอบล่างของ iPad */
 }
 
 .member-preview {

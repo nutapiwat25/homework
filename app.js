@@ -24,6 +24,7 @@ import {
   onSnapshot,
   serverTimestamp,
   arrayUnion,
+  arrayRemove,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -303,7 +304,7 @@ function renderActivity(activities = currentActivities) {
       items
         .map((t) => {
           const author = t.updatedByName || t.createdByName || "สมาชิก";
-          const isDone = t.status === "done";
+          const isDone = t.completedBy && t.completedBy.length > 0;
           const actionLabel = isDone ? "ทำเสร็จแล้ว" : "อัปเดตงาน";
           const actionClass = isDone ? "act-done" : "act-update";
           const timeText = timeAgo(t.updatedAt);
@@ -351,7 +352,6 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  // งานที่ผู้ใช้ปัจจุบันทำเสร็จแล้ว หรือมีการส่งงานแล้ว
   const done = tasks.filter((t) => t.completedBy && t.completedBy.length > 0).length,
     urgent = tasks.filter(
       (t) =>
@@ -380,13 +380,14 @@ function render() {
 function filtered() {
   const term = $("#searchInput").value.toLowerCase();
   return tasks.filter((t) => {
+    const isDone = t.completedBy && t.completedBy.length > 0;
     const ok =
       activeFilter === "all" ||
       (activeFilter === "mine" && t.assigneeId === user.uid) ||
       (activeFilter === "week" &&
         daysAway(t.due) >= 0 &&
         daysAway(t.due) <= 7) ||
-      (activeFilter === "done" && t.status === "done");
+      (activeFilter === "done" && isDone);
     return (
       ok &&
       `${t.title} ${t.subject} ${t.note || ""}`.toLowerCase().includes(term)
@@ -405,7 +406,6 @@ function due(t) {
         : fmt(t.due);
 }
 
-// ปรับปรุงฟังก์ชัน renderTasks()
 function renderTasks() {
   const list = filtered();
   const members = (group && group.data && group.data().members) || {};
@@ -413,7 +413,6 @@ function renderTasks() {
   $("#taskList").innerHTML = list.length
     ? list.map((t) => {
         const completedUids = t.completedBy || [];
-        // สร้างข้อความรายชื่อคนทำเสร็จแล้ว
         const doneNames = completedUids
           .map((uid) => members[uid] || "สมาชิก")
           .join(", ");
@@ -422,7 +421,6 @@ function renderTasks() {
           ? `<span class="done-by-text">✓ ทำแล้ว: ${esc(doneNames)}</span>`
           : `<span class="pending-text">ยังไม่มีคนทำเสร็จ</span>`;
 
-        // ในหน้า ภาพรวมกลุ่ม (activeFilter !== 'mine') จะไม่มีปุ่มติ๊ก check-button
         const isMyView = activeFilter === "mine";
         const isDoneByMe = completedUids.includes(user.uid);
 
@@ -453,7 +451,7 @@ function renderTasks() {
 function renderDue() {
   $("#dueList").innerHTML =
     tasks
-      .filter((t) => t.status !== "done")
+      .filter((t) => !t.completedBy || !t.completedBy.includes(user?.uid))
       .slice(0, 4)
       .map(
         (t) =>
@@ -535,7 +533,7 @@ function renderCalendar() {
 
 function renderCalendarTasks() {
   let list = [];
-  const members = (group && group.data && group.data().members) || {}; // เพิ่มบรรทัดนี้
+  const members = (group && group.data && group.data().members) || {};
 
   if (selectedCalDate) {
     list = tasks.filter((t) => t.due === selectedCalDate);
@@ -609,6 +607,8 @@ async function showDetail(id) {
     ? `<p class="detail-link"><b>🔗 ลิงก์ประกอบ:</b> <a href="${esc(t.link)}" target="_blank" rel="noopener noreferrer">${esc(t.link)}</a></p>`
     : "";
 
+  const isDoneByMe = (t.completedBy || []).includes(user?.uid);
+
   $("#taskDetail").innerHTML = `
     <div class="detail-head">
       <span class="subject-pill subject-cs">${esc(t.subject)}</span>
@@ -617,7 +617,7 @@ async function showDetail(id) {
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
       ${linkHtml}
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
-      <button id="detailDone" class="secondary-button">${t.status === "done" ? "เปิดงานอีกครั้ง" : "ทำเครื่องหมายว่าเสร็จ"}</button>
+      <button id="detailDone" class="secondary-button">${isDoneByMe ? "ยกเลิกทำเครื่องหมายเสร็จ" : "ทำเครื่องหมายว่าเสร็จ"}</button>
     </div>
   `;
 
@@ -645,7 +645,6 @@ function subscribeComments(taskId) {
   });
 }
 
-// ใน app.js
 async function toggleDone(taskId) {
   const t = tasks.find((x) => x.id === taskId);
   if (!t || !user) return;
@@ -655,7 +654,6 @@ async function toggleDone(taskId) {
   const taskRef = doc(db, "groups", group.id, "tasks", taskId);
 
   if (isDoneByMe) {
-    // ยกเลิกสถานะทำเสร็จของตัวเอง
     await updateDoc(taskRef, {
       completedBy: arrayRemove(user.uid),
       updatedAt: serverTimestamp(),
@@ -663,7 +661,6 @@ async function toggleDone(taskId) {
     await logActivity("ยกเลิกการส่งงาน", t.title);
     toast("ยกเลิกทำเครื่องหมายว่าเสร็จแล้ว");
   } else {
-    // บันทึกว่าทำเสร็จแล้ว
     await updateDoc(taskRef, {
       completedBy: arrayUnion(user.uid),
       updatedAt: serverTimestamp(),
@@ -672,7 +669,7 @@ async function toggleDone(taskId) {
     toast("เก่งมาก! ทำงานนี้เสร็จแล้ว");
   }
 }
-// สลับและจำค่า Dark Mode ลง LocalStorage
+
 function initTheme() {
   const isDark = localStorage.getItem("homie-theme") === "dark";
   document.body.classList.toggle("dark", isDark);
@@ -685,7 +682,6 @@ $("#themeToggle").onclick = () => {
   $("#themeToggle").textContent = isDark ? "☀" : "☾";
 };
 
-// ควบคุมการเปิด-ปิด Sidebar บนมือถือ
 const toggleMobileSidebar = (open) => {
   const sidebar = $("#sidebar");
   const overlay = $("#sidebarOverlay");
@@ -700,7 +696,6 @@ if ($("#sidebarOverlay")) {
   $("#sidebarOverlay").onclick = () => toggleMobileSidebar(false);
 }
 
-// โหลดสถานะ Theme เมื่อเปิดเว็บ
 initTheme();
 
 $("#taskForm").onsubmit = async (e) => {
@@ -738,6 +733,7 @@ $("#taskForm").onsubmit = async (e) => {
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...data,
         status: "todo",
+        completedBy: [],
         createdBy: user ? user.uid : "",
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
@@ -889,16 +885,11 @@ document.querySelectorAll(".nav-item").forEach(
       if (v === "calendar") {
         renderCalendar();
       }
-      $("#sidebar").classList.remove("open");
+      toggleMobileSidebar(false);
     }),
 );
 
 $("#logoutButton").onclick = () => signOut(auth);
-$("#mobileMenu").onclick = () => $("#sidebar").classList.toggle("open");
-$("#themeToggle").onclick = () => {
-  document.body.classList.toggle("dark");
-  $("#themeToggle").textContent = document.body.classList.contains("dark") ? "☀" : "☾";
-};
 
 $("#openMembers").onclick = () =>
   toast(`กลุ่มนี้มี ${Object.keys(group?.data()?.members || {}).length} สมาชิก`);

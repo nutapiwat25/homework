@@ -440,14 +440,14 @@ function renderTasks() {
             </button>
             <div class="task-actions">
               <span class="priority-dot ${t.priority}"></span>
-              <button class="edit-task" data-action="edit" title="แก้ไข">✎</button>
-              <button class="btn-delete" data-action="delete" title="ลบงาน">🗑️</button>
+              <button class="edit-task" data-action="edit">✎</button>
             </div>
           </article>
         `;
       }).join("")
     : '<div class="empty-list">ยังไม่มีงานในรายการนี้</div>';
 }
+
 function renderDue() {
   $("#dueList").innerHTML =
     tasks
@@ -690,25 +690,6 @@ const toggleMobileSidebar = (open) => {
   sidebar.classList.toggle("open", isOpen);
   if (overlay) overlay.classList.toggle("show", isOpen);
 };
-// ฟังก์ชันลบงาน (แก้ไขให้ใช้ group.id)
-async function deleteTask(taskId) {
-  if (!group || !group.id) return;
-
-  const confirmDelete = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?");
-  if (!confirmDelete) return;
-
-  try {
-    const taskRef = doc(db, "groups", group.id, "tasks", taskId);
-    await deleteDoc(taskRef);
-    await logActivity("ลบงานในกลุ่มเรียบร้อยแล้ว");
-    toast("ลบงานสำเร็จแล้ว");
-  } catch (error) {
-    console.error("Error deleting task: ", error);
-    alert("เกิดข้อผิดพลาด ไม่สามารถลบงานได้");
-  }
-}
-
-window.deleteTask = deleteTask;
 
 $("#mobileMenu").onclick = () => toggleMobileSidebar(true);
 if ($("#sidebarOverlay")) {
@@ -790,6 +771,15 @@ $("#commentForm").onsubmit = async (e) => {
 
   await logActivity("แสดงความคิดเห็นใน", selectedTask.title);
   $("#commentInput").value = "";
+};
+
+$("#taskList").onclick = (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const id = b.closest(".task-item").dataset.id;
+  if (b.dataset.action === "done") toggleDone(id);
+  if (b.dataset.action === "edit") openTask(id);
+  if (b.dataset.action === "detail") showDetail(id);
 };
 
 $("#dueList").onclick = (e) => {
@@ -941,18 +931,6 @@ $("#clearDateFilter").onclick = () => {
   renderCalendar();
 };
 
-// อัปเดตใน #taskList handler
-$("#taskList").onclick = (e) => {
-  const b = e.target.closest("[data-action]");
-  if (!b) return;
-  const id = b.closest(".task-item").dataset.id;
-  if (b.dataset.action === "done") toggleDone(id);
-  if (b.dataset.action === "edit") openTask(id);
-  if (b.dataset.action === "detail") showDetail(id);
-  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
-};
-
-// อัปเดตใน #calendarTaskList handler
 $("#calendarTaskList").onclick = (e) => {
   const b = e.target.closest("[data-action]");
   if (!b) return;
@@ -960,6 +938,4 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "done") toggleDone(id);
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
-  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
 };
-//test

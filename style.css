@@ -1346,17 +1346,3 @@ body.dark .toast {
     font-size: 10px;
   }
 }
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.btn-delete:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-}
-/*test*/

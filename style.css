@@ -54,17 +54,19 @@ body {
 }
 
 /* Sidebar & Navigation */
+/* Sidebar & Navigation */
 .sidebar {
   width: 244px;
-  min-height: 100vh;
+  height: 100vh; /* ปรับจาก min-height เป็น height ให้สูงพอดีหน้าจอ */
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
   background: var(--sidebar);
   color: #fff;
   display: flex;
   flex-direction: column;
   padding: 31px 16px 18px;
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 30;
+  overflow-y: auto; /* เพิ่มเพื่อให้สกอร์ลได้เมื่อเนื้อหาล้นในหน้าจอขนาดเล็ก */
   transition: transform 0.25s ease-in-out;
 }
 
@@ -1340,3 +1342,4 @@ body.dark .toast {
     font-size: 10px;
   }
 }
+/*test*/

@@ -1246,7 +1246,7 @@ body.dark .toast {
 .comment-form { display: flex; gap: 8px; margin-top: 12px; }
 
 /* Responsive Design */
-@media (max-width: 1366px) {
+@media (max-width: 1080px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .workspace { grid-template-columns: 1fr; }
   .workspace .right-column { grid-template-columns: 1fr 1fr; }

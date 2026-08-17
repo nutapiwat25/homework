@@ -53,6 +53,7 @@ body {
   display: flex;
 }
 
+/* Sidebar & Navigation */
 .sidebar {
   width: 244px;
   min-height: 100vh;

@@ -1352,7 +1352,7 @@ body.dark .toast {
   display: flex;
   align-items: center;
   /* กำหนดระยะ Gap เป็นลบ เพื่อให้รูปซ้อนทับกัน */
-  gap: -10px; /* ยิ่งลบเยอะ ยิ่งซ้อนเยอะ (เช่น -8px ถึง -12px) */
+  gap: -20px; /* ยิ่งลบเยอะ ยิ่งซ้อนเยอะ (เช่น -8px ถึง -12px) */
   margin-bottom: 8px;
   padding-left: 5px; /* เพิ่ม padding ซ้ายเล็กน้อยเพื่อไม่ให้รูปแรกชิดขอบ */
 }

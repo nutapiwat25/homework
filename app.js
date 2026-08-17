@@ -440,33 +440,14 @@ function renderTasks() {
             </button>
             <div class="task-actions">
               <span class="priority-dot ${t.priority}"></span>
-              <button class="edit-task" data-action="edit">✎</button>
+              <button class="edit-task" data-action="edit" title="แก้ไข">✎</button>
+              <button class="btn-delete" data-action="delete" title="ลบงาน">🗑️</button>
             </div>
           </article>
         `;
       }).join("")
     : '<div class="empty-list">ยังไม่มีงานในรายการนี้</div>';
 }
-// ตัวอย่างโครงสร้าง HTML ในฟังก์ชัน renderTasks()
-function renderTaskCard(task) {
-  return `
-    <div class="task-card" data-id="${task.id}">
-      <div class="task-header">
-        <h4>${esc(task.title)}</h4>
-        <!-- ปุ่มลบงาน -->
-        <button class="btn-delete" onclick="deleteTask('${task.id}')" title="ลบงาน">
-          🗑️
-        </button>
-      </div>
-      <p>${esc(task.description)}</p>
-      <div class="task-footer">
-        <span class="badge">${esc(task.status)}</span>
-        <span>${esc(task.assigneeName || 'ไม่ระบุ')}</span>
-      </div>
-    </div>
-  `;
-}
-
 function renderDue() {
   $("#dueList").innerHTML =
     tasks
@@ -709,27 +690,24 @@ const toggleMobileSidebar = (open) => {
   sidebar.classList.toggle("open", isOpen);
   if (overlay) overlay.classList.toggle("show", isOpen);
 };
-// ฟังก์ชันลบงาน
+// ฟังก์ชันลบงาน (แก้ไขให้ใช้ group.id)
 async function deleteTask(taskId) {
-  if (!currentGroupId) return;
+  if (!group || !group.id) return;
 
-  // แจ้งเตือนยืนยันก่อนลบ
   const confirmDelete = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?");
   if (!confirmDelete) return;
 
   try {
-    const taskRef = doc(db, "groups", currentGroupId, "tasks", taskId);
+    const taskRef = doc(db, "groups", group.id, "tasks", taskId);
     await deleteDoc(taskRef);
-
-    // บันทึก Activity Log (ถ้ามีระบบนี้อยู่แล้ว)
-    await logActivity(`ลบงานในกลุ่มเรียบร้อยแล้ว`);
+    await logActivity("ลบงานในกลุ่มเรียบร้อยแล้ว");
+    toast("ลบงานสำเร็จแล้ว");
   } catch (error) {
     console.error("Error deleting task: ", error);
     alert("เกิดข้อผิดพลาด ไม่สามารถลบงานได้");
   }
 }
 
-// ผูกฟังก์ชันเข้ากับ window เพื่อให้เรียกใช้งานผ่าน HTML onclick ได้
 window.deleteTask = deleteTask;
 
 $("#mobileMenu").onclick = () => toggleMobileSidebar(true);
@@ -812,15 +790,6 @@ $("#commentForm").onsubmit = async (e) => {
 
   await logActivity("แสดงความคิดเห็นใน", selectedTask.title);
   $("#commentInput").value = "";
-};
-
-$("#taskList").onclick = (e) => {
-  const b = e.target.closest("[data-action]");
-  if (!b) return;
-  const id = b.closest(".task-item").dataset.id;
-  if (b.dataset.action === "done") toggleDone(id);
-  if (b.dataset.action === "edit") openTask(id);
-  if (b.dataset.action === "detail") showDetail(id);
 };
 
 $("#dueList").onclick = (e) => {
@@ -972,6 +941,18 @@ $("#clearDateFilter").onclick = () => {
   renderCalendar();
 };
 
+// อัปเดตใน #taskList handler
+$("#taskList").onclick = (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const id = b.closest(".task-item").dataset.id;
+  if (b.dataset.action === "done") toggleDone(id);
+  if (b.dataset.action === "edit") openTask(id);
+  if (b.dataset.action === "detail") showDetail(id);
+  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
+};
+
+// อัปเดตใน #calendarTaskList handler
 $("#calendarTaskList").onclick = (e) => {
   const b = e.target.closest("[data-action]");
   if (!b) return;
@@ -979,4 +960,5 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "done") toggleDone(id);
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
+  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
 };

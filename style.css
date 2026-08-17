@@ -66,8 +66,6 @@ body {
   inset: 0 auto 0 0;
   z-index: 30;
   transition: transform 0.25s ease-in-out;
-  justify-content: space-between;
-  overflow-y: auto;
 }
 
 .brand {
@@ -196,10 +194,7 @@ body {
 }
 
 .sidebar-footer {
-  flex-shrink: 0; 
-  margin-top: auto; 
-  padding: 16px;
-  border-top: 1px solid var(--line);
+  margin-top: auto;
 }
 
 .member-preview {
@@ -1205,6 +1200,7 @@ body.dark .toast {
   font-weight: 400;
   opacity: 0.7;
 }
+
 .auth-brand { padding: 0 0 20px; color: var(--text); }
 .auth-kicker { font-size: 10px; letter-spacing: 1.25px; color: var(--primary); font-weight: 800; margin: 0 0 8px; }
 .auth-card h1 { font-size: 24px; line-height: 1.26; margin: 0; color: var(--text); }
@@ -1343,17 +1339,4 @@ body.dark .toast {
   .cal-day-num {
     font-size: 10px;
   }
-}
-.btn-delete {
-  background: transparent;
-  border: none;
-  color: #ef4444;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.btn-delete:hover {
-  background-color: rgba(239, 68, 68, 0.1);
 }

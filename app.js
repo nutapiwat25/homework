@@ -14,9 +14,7 @@ import {
   addDoc,
   setDoc,
   updateDoc,
-  deleteDoc,
   getDoc,
-  getDocs,
   query,
   where,
   orderBy,
@@ -36,23 +34,23 @@ const firebaseConfig = {
   appId: "1:1078534206598:web:0cc8b1334851c3cc4f8d07",
 };
 
-const app = initializeApp(firebaseConfig),
-  auth = getAuth(app),
-  db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const $ = (s) => document.querySelector(s),
-  esc = (s) =>
-    String(s || "").replace(
-      /[&<>'"]/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          "'": "&#39;",
-          '"': "&quot;",
-        })[c],
-    );
+const $ = (s) => document.querySelector(s);
+const esc = (s) =>
+  String(s || "").replace(
+    /[&<>'"]/g,
+    (c) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "'": "&#39;",
+        '"': "&quot;",
+      })[c],
+  );
 
 let user,
   group,
@@ -85,18 +83,22 @@ const fmt = (date) =>
   });
 
 function toast(text) {
+  const t = $("#toast");
+  if (!t) return;
   $("#toastText").textContent = text;
-  $("#toast").classList.add("show");
+  t.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => $("#toast").classList.remove("show"), 2600);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
 }
 
-function open(id) {
-  $(`#${id}`).classList.add("open");
+function openModal(id) {
+  const el = $(`#${id}`);
+  if (el) el.classList.add("open");
 }
 
-function close(id) {
-  $(`#${id}`).classList.remove("open");
+function closeModal(id) {
+  const el = $(`#${id}`);
+  if (el) el.classList.remove("open");
 }
 
 document.querySelectorAll(".auth-tab").forEach(
@@ -135,13 +137,14 @@ $("#authForm").onsubmit = async (e) => {
         $("#password").value,
       );
     }
-  } catch (e) {
+  } catch (err) {
+    const errMap = {
+      "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+      "auth/email-already-in-use": "อีเมลนี้ถูกใช้งานแล้ว",
+      "auth/weak-password": "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร",
+    };
     $("#authError").textContent =
-      {
-        "auth/invalid-credential": "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
-        "auth/email-already-in-use": "อีเมลนี้ถูกใช้งานแล้ว",
-        "auth/weak-password": "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร",
-      }[e.code] || "เข้าสู่ระบบไม่สำเร็จ โปรดลองใหม่";
+      errMap[err.code] || "เข้าสู่ระบบไม่สำเร็จ โปรดลองใหม่อีกครั้ง";
   }
 };
 
@@ -160,9 +163,10 @@ onAuthStateChanged(auth, async (u) => {
   $("#appShell").classList.remove("hidden");
   $("#profileName").textContent = nameOf();
   $("#welcomeName").textContent = nameOf();
-  ["profileAvatar", "topAvatar"].forEach(
-    (id) => ($("#" + id).textContent = initials(nameOf())),
-  );
+  ["profileAvatar", "topAvatar"].forEach((id) => {
+    const el = $("#" + id);
+    if (el) el.textContent = initials(nameOf());
+  });
   await loadGroups();
 });
 
@@ -206,6 +210,7 @@ async function createGroup() {
 }
 
 function renderGroup() {
+  if (!group) return;
   const data = group.data();
   ensureInvite(data);
   $("#groupNameSide").textContent = data.name;
@@ -216,10 +221,14 @@ function renderGroup() {
   $("#memberAvatars").innerHTML =
     members
       .slice(0, 5)
-      .map(([id, n]) => `<span title="${esc(n)}">${esc(initials(n))}</span>`)
+      .map(([_, n]) => `<span title="${esc(n)}">${esc(initials(n))}</span>`)
       .join("") + (members.length > 5 ? `<i>+${members.length - 5}</i>` : "");
-  $("#taskAssignee").innerHTML =
-    `<option value="">ยังไม่มอบหมาย</option>${members.map(([id, n]) => `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`).join("")}`;
+  $("#taskAssignee").innerHTML = `<option value="">ยังไม่มอบหมาย</option>${members
+    .map(
+      ([id, n]) =>
+        `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`,
+    )
+    .join("")}`;
 }
 
 async function ensureInvite(data) {
@@ -240,22 +249,12 @@ async function ensureInvite(data) {
 
 function subscribeTasks() {
   if (stopTasks) stopTasks();
-  const q = query(collection(db, "groups", group.id, "tasks"), orderBy("due", "asc"));
-  
   stopTasks = onSnapshot(
-    q,
+    query(collection(db, "groups", group.id, "tasks"), orderBy("due", "asc")),
     (snap) => {
       tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
     },
-    (err) => {
-      console.warn("Firestore ordering error, fallback to default query:", err);
-      // Fallback ดึงงานทั้งหมดมาแสดงผลเมื่อ Query Index มีปัญหา
-      onSnapshot(collection(db, "groups", group.id, "tasks"), (snap) => {
-        tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-        render();
-      });
-    }
   );
   subscribeActivities();
 }
@@ -320,7 +319,7 @@ function renderActivity(activities = currentActivities) {
           const timeText = timeAgo(t.updatedAt);
 
           return `<div class="activity-row">
-            <span class="avatar-sm">${initials(author)}</span>
+            <span class="avatar-sm">${esc(initials(author))}</span>
             <div class="activity-content">
               <div class="activity-header">
                 <b>${esc(author)}</b>
@@ -343,7 +342,7 @@ function renderActivity(activities = currentActivities) {
         if (action.includes("ความเห็น")) actionClass = "act-comment";
 
         return `<div class="activity-row">
-          <span class="avatar-sm">${initials(author)}</span>
+          <span class="avatar-sm">${esc(initials(author))}</span>
           <div class="activity-content">
             <div class="activity-header">
               <b>${esc(author)}</b>
@@ -362,14 +361,16 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  const done = tasks.filter((t) => t.completedBy && t.completedBy.length > 0).length,
-    urgent = tasks.filter(
-      (t) =>
-        (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
-        daysAway(t.due) >= 0 &&
-        daysAway(t.due) <= 3,
-    ).length,
-    pending = tasks.length - done;
+  const done = tasks.filter(
+    (t) => t.completedBy && t.completedBy.length > 0,
+  ).length;
+  const urgent = tasks.filter(
+    (t) =>
+      (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
+      daysAway(t.due) >= 0 &&
+      daysAway(t.due) <= 3,
+  ).length;
+  const pending = tasks.length - done;
 
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
@@ -421,20 +422,21 @@ function renderTasks() {
   const members = (group && group.data && group.data().members) || {};
 
   $("#taskList").innerHTML = list.length
-    ? list.map((t) => {
-        const completedUids = t.completedBy || [];
-        const doneNames = completedUids
-          .map((uid) => members[uid] || "สมาชิก")
-          .join(", ");
+    ? list
+        .map((t) => {
+          const completedUids = t.completedBy || [];
+          const doneNames = completedUids
+            .map((uid) => members[uid] || "สมาชิก")
+            .join(", ");
 
-        const doneStatusText = doneNames
-          ? `<span class="done-by-text">✓ ทำแล้ว: ${esc(doneNames)}</span>`
-          : `<span class="pending-text">ยังไม่มีคนทำเสร็จ</span>`;
+          const doneStatusText = doneNames
+            ? `<span class="done-by-text">✓ ทำแล้ว: ${esc(doneNames)}</span>`
+            : `<span class="pending-text">ยังไม่มีคนทำเสร็จ</span>`;
 
-        const isMyView = activeFilter === "mine";
-        const isDoneByMe = completedUids.includes(user.uid);
+          const isMyView = activeFilter === "mine";
+          const isDoneByMe = completedUids.includes(user?.uid);
 
-        return `
+          return `
           <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
             ${isMyView ? `<button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>` : ""}
             <button class="task-open" data-action="detail">
@@ -449,15 +451,16 @@ function renderTasks() {
               </div>
             </button>
             <div class="task-actions">
-              <span class="priority-dot ${t.priority}"></span>
-              <button class="edit-task" data-action="edit" title="แก้ไข">✎</button>
-              <button class="btn-delete" data-action="delete" title="ลบงาน">🗑️</button>
+              <span class="priority-dot ${esc(t.priority || "medium")}"></span>
+              <button class="edit-task" data-action="edit" title="แก้ไขงาน">✎</button>
             </div>
           </article>
         `;
-      }).join("")
+        })
+        .join("")
     : '<div class="empty-list">ยังไม่มีงานในรายการนี้</div>';
 }
+
 function renderDue() {
   $("#dueList").innerHTML =
     tasks
@@ -483,8 +486,18 @@ function renderCalendar() {
   const month = currCalDate.getMonth();
 
   const monthNames = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+    "มกราคม",
+    "กุมภาพันธ์",
+    "มีนาคม",
+    "เมษายน",
+    "พฤษภาคม",
+    "มิถุนายน",
+    "กรกฎาคม",
+    "สิงหาคม",
+    "กันยายน",
+    "ตุลาคม",
+    "พฤศจิกายน",
+    "ธันวาคม",
   ];
   $("#calendarMonthYear").textContent = `${monthNames[month]} ${year + 543}`;
 
@@ -507,20 +520,24 @@ function renderCalendar() {
 
     let dotsHtml = "";
     if (dayTasks.length > 0) {
-      const hasDone = dayTasks.some((t) => t.completedBy && t.completedBy.length > 0);
+      const hasDone = dayTasks.some(
+        (t) => t.completedBy && t.completedBy.length > 0,
+      );
       const hasUrgent = dayTasks.some(
-        (t) => (!t.completedBy || !t.completedBy.includes(user?.uid)) && daysAway(t.due) <= 3,
+        (t) =>
+          (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
+          daysAway(t.due) <= 3,
       );
       const hasNormal = dayTasks.some(
-        (t) => (!t.completedBy || !t.completedBy.includes(user?.uid)) && daysAway(t.due) > 3,
+        (t) =>
+          (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
+          daysAway(t.due) > 3,
       );
 
       if (hasUrgent)
         dotsHtml += `<i class="dot peach" title="มีงานด่วน/ใกล้ส่ง"></i>`;
-      if (hasNormal)
-        dotsHtml += `<i class="dot lilac" title="มีกำหนดส่ง"></i>`;
-      if (hasDone) 
-        dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
+      if (hasNormal) dotsHtml += `<i class="dot lilac" title="มีกำหนดส่ง"></i>`;
+      if (hasDone) dotsHtml += `<i class="dot green" title="งานเสร็จแล้ว"></i>`;
     }
 
     html += `
@@ -547,7 +564,8 @@ function renderCalendarTasks() {
 
   if (selectedCalDate) {
     list = tasks.filter((t) => t.due === selectedCalDate);
-    $("#selectedDateTitle").textContent = `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
+    $("#selectedDateTitle").textContent =
+      `งานกำหนดส่งวันที่ ${fmt(selectedCalDate)}`;
     $("#selectedDateSub").textContent = `พบ ${list.length} รายการ`;
   } else {
     const monthStr = `${currCalDate.getFullYear()}-${String(currCalDate.getMonth() + 1).padStart(2, "0")}`;
@@ -558,14 +576,17 @@ function renderCalendarTasks() {
 
   $("#calendarTaskList").innerHTML = list.length
     ? list
-        .map(
-          (t) => {
-            const completedUids = t.completedBy || [];
-            const doneNames = completedUids.map((uid) => members[uid] || "สมาชิก").join(", ");
-            const doneText = doneNames ? `<div class="cal-done-users" style="font-size: 11px; color: #44ac82; margin-top: 4px;">✓ ทำแล้ว: ${esc(doneNames)}</div>` : "";
-            const isDoneByMe = completedUids.includes(user.uid);
+        .map((t) => {
+          const completedUids = t.completedBy || [];
+          const doneNames = completedUids
+            .map((uid) => members[uid] || "สมาชิก")
+            .join(", ");
+          const doneText = doneNames
+            ? `<div class="cal-done-users" style="font-size: 11px; color: #44ac82; margin-top: 4px;">✓ ทำแล้ว: ${esc(doneNames)}</div>`
+            : "";
+          const isDoneByMe = completedUids.includes(user?.uid);
 
-            return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
+          return `<article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
               <button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>
               <button class="task-open" data-action="detail">
                 <span class="task-title">${esc(t.title)}</span>
@@ -577,13 +598,13 @@ function renderCalendarTasks() {
                 ${doneText}
               </button>
               <div class="task-actions">
-                <span class="priority-dot ${t.priority}"></span>
+                <span class="priority-dot ${esc(t.priority || "medium")}"></span>
                 <button class="edit-task" data-action="edit">✎</button>
               </div>
             </article>`;
         })
         .join("")
-    : '<div class="empty-list"><span>☁</span>ไม่มีรายการงานในวันที่เลือก</div>';
+    : '<div class="empty-list"><span>☁</span> ไม่มีรายการงานในวันที่เลือก</div>';
 }
 
 function openTask(id) {
@@ -605,7 +626,7 @@ function openTask(id) {
     $("#taskSection").value = "section650001";
     $("#taskDue").value = today();
   }
-  open("taskModal");
+  openModal("taskModal");
 }
 
 async function showDetail(id) {
@@ -633,7 +654,7 @@ async function showDetail(id) {
 
   $("#detailDone").onclick = () => toggleDone(t.id);
   subscribeComments(t.id);
-  open("detailModal");
+  openModal("detailModal");
 }
 
 function subscribeComments(taskId) {
@@ -648,7 +669,7 @@ function subscribeComments(taskId) {
       ? comments
           .map(
             (c) =>
-              `<div class="comment"><span>${initials(c.authorName)}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`,
+              `<div class="comment"><span>${esc(initials(c.authorName))}</span><p><b>${esc(c.authorName)}</b>${esc(c.text)}</p></div>`,
           )
           .join("")
       : '<p class="tiny-empty">ยังไม่มีความคิดเห็น</p>';
@@ -695,31 +716,12 @@ $("#themeToggle").onclick = () => {
 const toggleMobileSidebar = (open) => {
   const sidebar = $("#sidebar");
   const overlay = $("#sidebarOverlay");
-  const isOpen = open !== undefined ? open : !sidebar.classList.contains("open");
-  
+  const isOpen =
+    open !== undefined ? open : !sidebar.classList.contains("open");
+
   sidebar.classList.toggle("open", isOpen);
   if (overlay) overlay.classList.toggle("show", isOpen);
 };
-// ฟังก์ชันลบงาน (แก้ไขให้ใช้ group.id)
-async function deleteTask(taskId) {
-  if (!group || !group.id) return;
-  const t = tasks.find((x) => x.id === taskId);
-
-  const confirmDelete = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?");
-  if (!confirmDelete) return;
-
-  try {
-    const taskRef = doc(db, "groups", group.id, "tasks", taskId);
-    await deleteDoc(taskRef);
-    await logActivity("ลบงาน", t ? t.title : "");
-    toast("ลบงานสำเร็จแล้ว");
-  } catch (error) {
-    console.error("Error deleting task: ", error);
-    alert("เกิดข้อผิดพลาด ไม่สามารถลบงานได้");
-  }
-}
-
-window.deleteTask = deleteTask;
 
 $("#mobileMenu").onclick = () => toggleMobileSidebar(true);
 if ($("#sidebarOverlay")) {
@@ -745,7 +747,9 @@ $("#taskForm").onsubmit = async (e) => {
     const data = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
-      section: $("#taskSection") ? $("#taskSection").value.trim() : "section650001",
+      section: $("#taskSection")
+        ? $("#taskSection").value.trim()
+        : "section650001",
       due: $("#taskDue").value,
       priority: $("#taskPriority").value,
       link: $("#taskLink") ? $("#taskLink").value.trim() : "",
@@ -771,12 +775,14 @@ $("#taskForm").onsubmit = async (e) => {
       await logActivity("สร้างงานใหม่", taskTitle);
     }
 
-    close("taskModal");
+    closeModal("taskModal");
     $("#taskForm").reset();
     toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
   } catch (err) {
     console.error("Task Form Error:", err);
-    alert("เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"));
+    alert(
+      "เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"),
+    );
   } finally {
     submitBtn.disabled = false;
     submitBtn.textContent = "บันทึกงาน";
@@ -803,6 +809,15 @@ $("#commentForm").onsubmit = async (e) => {
   $("#commentInput").value = "";
 };
 
+$("#taskList").onclick = (e) => {
+  const b = e.target.closest("[data-action]");
+  if (!b) return;
+  const id = b.closest(".task-item").dataset.id;
+  if (b.dataset.action === "done") toggleDone(id);
+  if (b.dataset.action === "edit") openTask(id);
+  if (b.dataset.action === "detail") showDetail(id);
+};
+
 $("#dueList").onclick = (e) => {
   const row = e.target.closest("[data-task]");
   if (row) showDetail(row.dataset.task);
@@ -815,7 +830,9 @@ $("#dueList").onclick = (e) => {
 
 $("#showAllTasks").onclick = () => {
   activeFilter = "all";
-  document.querySelectorAll(".filter-tab").forEach((x) => x.classList.toggle("active", x.dataset.filter === "all"));
+  document
+    .querySelectorAll(".filter-tab")
+    .forEach((x) => x.classList.toggle("active", x.dataset.filter === "all"));
   renderTasks();
 };
 
@@ -831,8 +848,8 @@ document.querySelectorAll(".filter-tab").forEach(
 );
 
 $("#searchInput").oninput = renderTasks;
-$("#inviteButton").onclick = () => open("inviteModal");
-$("#groupSwitcher").onclick = () => open("inviteModal");
+$("#inviteButton").onclick = () => openModal("inviteModal");
+$("#groupSwitcher").onclick = () => openModal("inviteModal");
 
 $("#copyInvite").onclick = async () => {
   await navigator.clipboard.writeText(group.data().inviteCode);
@@ -858,7 +875,7 @@ $("#joinForm").onsubmit = async (e) => {
       updatedAt: serverTimestamp(),
     });
     localStorage.setItem("homie-group", g);
-    close("inviteModal");
+    closeModal("inviteModal");
     toast("เข้าร่วมกลุ่มสำเร็จแล้ว");
   } catch (error) {
     $("#joinError").textContent =
@@ -868,11 +885,13 @@ $("#joinForm").onsubmit = async (e) => {
   }
 };
 
-document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => close(b.dataset.close)));
+document
+  .querySelectorAll("[data-close]")
+  .forEach((b) => (b.onclick = () => closeModal(b.dataset.close)));
 document.querySelectorAll(".modal-backdrop").forEach(
   (m) =>
     (m.onclick = (e) => {
-      if (e.target === m) close(m.id);
+      if (e.target === m) closeModal(m.id);
     }),
 );
 
@@ -883,24 +902,36 @@ document.querySelectorAll(".nav-item").forEach(
       document
         .querySelectorAll(".nav-item")
         .forEach((x) => x.classList.toggle("active", x === b));
-      $("#viewTitle").textContent = {
-        board: "ภาพรวม",
-        tasks: "งานส่วนตัว",
-        calendar: "ปฏิทิน",
-        activity: "กิจกรรม",
-      }[v] || "ภาพรวม";
+      $("#viewTitle").textContent =
+        {
+          board: "ภาพรวม",
+          tasks: "งานส่วนตัว",
+          calendar: "ปฏิทิน",
+          activity: "กิจกรรม",
+        }[v] || "ภาพรวม";
 
-      $("#boardView").classList.toggle("hidden", !["board", "tasks"].includes(v));
+      $("#boardView").classList.toggle(
+        "hidden",
+        !["board", "tasks"].includes(v),
+      );
       $("#calendarView").classList.toggle("hidden", v !== "calendar");
       $("#activityView").classList.toggle("hidden", v !== "activity");
 
       if (v === "tasks") {
         activeFilter = "mine";
-        document.querySelectorAll(".filter-tab").forEach((x) => x.classList.toggle("active", x.dataset.filter === "mine"));
+        document
+          .querySelectorAll(".filter-tab")
+          .forEach((x) =>
+            x.classList.toggle("active", x.dataset.filter === "mine"),
+          );
         renderTasks();
       } else if (v === "board") {
         activeFilter = "all";
-        document.querySelectorAll(".filter-tab").forEach((x) => x.classList.toggle("active", x.dataset.filter === "all"));
+        document
+          .querySelectorAll(".filter-tab")
+          .forEach((x) =>
+            x.classList.toggle("active", x.dataset.filter === "all"),
+          );
         renderTasks();
       }
       if (v === "calendar") {
@@ -952,18 +983,6 @@ $("#clearDateFilter").onclick = () => {
   renderCalendar();
 };
 
-// อัปเดตใน #taskList handler
-$("#taskList").onclick = (e) => {
-  const b = e.target.closest("[data-action]");
-  if (!b) return;
-  const id = b.closest(".task-item").dataset.id;
-  if (b.dataset.action === "done") toggleDone(id);
-  if (b.dataset.action === "edit") openTask(id);
-  if (b.dataset.action === "detail") showDetail(id);
-  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
-};
-
-// อัปเดตใน #calendarTaskList handler
 $("#calendarTaskList").onclick = (e) => {
   const b = e.target.closest("[data-action]");
   if (!b) return;
@@ -971,5 +990,4 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "done") toggleDone(id);
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
-  if (b.dataset.action === "delete") deleteTask(id); // <-- เพิ่มบรรทัดนี้
 };

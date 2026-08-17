@@ -67,8 +67,6 @@ body {
   z-index: 30;
   transition: transform 0.25s ease-in-out;
   justify-content: space-between;
-  position: sticky;
-  top: 0;
   overflow-y: auto;
 }
 

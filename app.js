@@ -240,12 +240,22 @@ async function ensureInvite(data) {
 
 function subscribeTasks() {
   if (stopTasks) stopTasks();
+  const q = query(collection(db, "groups", group.id, "tasks"), orderBy("due", "asc"));
+  
   stopTasks = onSnapshot(
-    query(collection(db, "groups", group.id, "tasks"), orderBy("due", "asc")),
+    q,
     (snap) => {
       tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
     },
+    (err) => {
+      console.warn("Firestore ordering error, fallback to default query:", err);
+      // Fallback ดึงงานทั้งหมดมาแสดงผลเมื่อ Query Index มีปัญหา
+      onSnapshot(collection(db, "groups", group.id, "tasks"), (snap) => {
+        tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        render();
+      });
+    }
   );
   subscribeActivities();
 }
@@ -693,6 +703,7 @@ const toggleMobileSidebar = (open) => {
 // ฟังก์ชันลบงาน (แก้ไขให้ใช้ group.id)
 async function deleteTask(taskId) {
   if (!group || !group.id) return;
+  const t = tasks.find((x) => x.id === taskId);
 
   const confirmDelete = confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?");
   if (!confirmDelete) return;
@@ -700,7 +711,7 @@ async function deleteTask(taskId) {
   try {
     const taskRef = doc(db, "groups", group.id, "tasks", taskId);
     await deleteDoc(taskRef);
-    await logActivity("ลบงานในกลุ่มเรียบร้อยแล้ว");
+    await logActivity("ลบงาน", t ? t.title : "");
     toast("ลบงานสำเร็จแล้ว");
   } catch (error) {
     console.error("Error deleting task: ", error);

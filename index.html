@@ -98,14 +98,14 @@
 
       <main class="main-content">
         <header class="topbar">
-          <button class="mobile-menu" id="mobileMenu">☰</button>
+          <button class="mobile-menu" id="mobileMenu" aria-label="เปิดเมนู">☰</button>
           <div class="crumbs">
             <span id="groupNameHeader">กลุ่มของฉัน</span><b>/</b>
             <strong id="viewTitle">ภาพรวม</strong>
           </div>
           <div class="topbar-actions">
             <button class="invite-button" id="inviteButton"><span>♧</span> <span>ชวนเพื่อน</span></button>
-            <button class="icon-button" id="themeToggle">☾</button>
+            <button class="icon-button" id="themeToggle" aria-label="เปลี่ยนธีม">☾</button>
             <span class="top-avatar" id="topAvatar">P</span>
           </div>
         </header>
@@ -259,8 +259,8 @@
     </div>
 
     <div class="modal-backdrop" id="taskModal">
-      <section class="task-modal" role="dialog">
-        <button class="close-modal" data-close="taskModal">×</button>
+      <section class="task-modal" role="dialog" aria-modal="true">
+        <button class="close-modal" data-close="taskModal" aria-label="ปิด">×</button>
         <div class="modal-title">
           <span class="modal-symbol">✦</span>
           <div>
@@ -320,8 +320,8 @@
     </div>
 
     <div class="modal-backdrop" id="inviteModal">
-      <section class="task-modal compact-modal" role="dialog">
-        <button class="close-modal" data-close="inviteModal">×</button>
+      <section class="task-modal compact-modal" role="dialog" aria-modal="true">
+        <button class="close-modal" data-close="inviteModal" aria-label="ปิด">×</button>
         <div class="modal-title">
           <span class="modal-symbol">♧</span>
           <div>
@@ -336,19 +336,19 @@
         <button class="primary-button full" id="copyInvite">
           คัดลอกรหัสเชิญ
         </button>
-        <hr />
-        <h3>เข้าร่วมกลุ่มด้วยรหัส</h3>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--line);" />
+        <h3 style="font-size: 14px; margin: 0 0 10px; color: var(--text);">เข้าร่วมกลุ่มด้วยรหัส</h3>
         <form id="joinForm" class="join-form">
-          <input id="joinCode" maxlength="6" placeholder="เช่น A1B2C3" />
-          <button class="secondary-button">เข้าร่วม</button>
+          <input id="joinCode" maxlength="6" placeholder="เช่น A1B2C3" required />
+          <button class="secondary-button" type="submit">เข้าร่วม</button>
         </form>
         <p class="form-error" id="joinError"></p>
       </section>
     </div>
 
     <div class="modal-backdrop" id="detailModal">
-      <section class="task-modal" role="dialog">
-        <button class="close-modal" data-close="detailModal">×</button>
+      <section class="task-modal" role="dialog" aria-modal="true">
+        <button class="close-modal" data-close="detailModal" aria-label="ปิด">×</button>
         <div id="taskDetail"></div>
         <div class="comments">
           <h3>ความคิดเห็น</h3>
@@ -360,7 +360,7 @@
               placeholder="เขียนความเห็นถึงเพื่อน..."
               required
             />
-            <button class="primary-button">ส่ง</button>
+            <button class="primary-button" type="submit">ส่ง</button>
           </form>
         </div>
       </section>

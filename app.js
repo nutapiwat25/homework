@@ -672,6 +672,36 @@ async function toggleDone(taskId) {
     toast("เก่งมาก! ทำงานนี้เสร็จแล้ว");
   }
 }
+// สลับและจำค่า Dark Mode ลง LocalStorage
+function initTheme() {
+  const isDark = localStorage.getItem("homie-theme") === "dark";
+  document.body.classList.toggle("dark", isDark);
+  $("#themeToggle").textContent = isDark ? "☀" : "☾";
+}
+
+$("#themeToggle").onclick = () => {
+  const isDark = document.body.classList.toggle("dark");
+  localStorage.setItem("homie-theme", isDark ? "dark" : "light");
+  $("#themeToggle").textContent = isDark ? "☀" : "☾";
+};
+
+// ควบคุมการเปิด-ปิด Sidebar บนมือถือ
+const toggleMobileSidebar = (open) => {
+  const sidebar = $("#sidebar");
+  const overlay = $("#sidebarOverlay");
+  const isOpen = open !== undefined ? open : !sidebar.classList.contains("open");
+  
+  sidebar.classList.toggle("open", isOpen);
+  if (overlay) overlay.classList.toggle("show", isOpen);
+};
+
+$("#mobileMenu").onclick = () => toggleMobileSidebar(true);
+if ($("#sidebarOverlay")) {
+  $("#sidebarOverlay").onclick = () => toggleMobileSidebar(false);
+}
+
+// โหลดสถานะ Theme เมื่อเปิดเว็บ
+initTheme();
 
 $("#taskForm").onsubmit = async (e) => {
   e.preventDefault();

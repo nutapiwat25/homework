@@ -1156,15 +1156,50 @@ body.dark .toast {
   background: var(--bg);
 }
 
-.auth-card {
-  width: min(450px, 100%);
-  padding: clamp(20px, 5vw, 36px);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 23px;
-  box-shadow: var(--shadow);
+/* ปรับสไตล์ Label และ ช่อง Input หน้า Auth */
+.auth-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
 }
 
+.auth-card input {
+  width: 100%;
+  height: 44px; /* ปรับความสูงให้ได้มาตรฐานกดง่าย */
+  padding: 0 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px; /* เพิ่มความโค้งมนให้เข้ากับกล่องใหญ่ */
+  background-color: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* เอฟเฟกต์เมื่อ Hover */
+.auth-card input:hover {
+  border-color: #b6acff;
+}
+
+/* เอฟเฟกต์เมื่อ Focus (คลิก พิมพ์) */
+.auth-card input:focus {
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 4px rgba(102, 88, 232, 0.15); /* แสงฟุ้งสีม่วงรอบกล่อง */
+}
+
+/* ปรับแต่ง Placeholder */
+.auth-card input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  opacity: 0.7;
+}
 .auth-brand { padding: 0 0 20px; color: var(--text); }
 .auth-kicker { font-size: 10px; letter-spacing: 1.25px; color: var(--primary); font-weight: 800; margin: 0 0 8px; }
 .auth-card h1 { font-size: 24px; line-height: 1.26; margin: 0; color: var(--text); }
@@ -1211,7 +1246,7 @@ body.dark .toast {
 .comment-form { display: flex; gap: 8px; margin-top: 12px; }
 
 /* Responsive Design */
-@media (max-width: 1080px) {
+@media (max-width: 1366px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .workspace { grid-template-columns: 1fr; }
   .workspace .right-column { grid-template-columns: 1fr 1fr; }

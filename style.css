@@ -1351,17 +1351,15 @@ body.dark .toast {
 .avatar-stack {
   display: flex;
   align-items: center;
-  /* กำหนดระยะ Gap เป็นลบ เพื่อให้รูปซ้อนทับกัน */
-  gap: -20px; /* ยิ่งลบเยอะ ยิ่งซ้อนเยอะ (เช่น -8px ถึง -12px) */
+  padding-left: 4px;
   margin-bottom: 8px;
-  padding-left: 5px; /* เพิ่ม padding ซ้ายเล็กน้อยเพื่อไม่ให้รูปแรกชิดขอบ */
 }
 
 .avatar-stack span,
 .avatar-stack i {
   display: grid;
   place-items: center;
-  width: 26px; /* ปรับขนาดให้ใหญ่ขึ้นเล็กน้อยเพื่อให้เห็นการซ้อนชัดเจน */
+  width: 26px;
   height: 26px;
   border-radius: 50%;
   background: #403d5a;
@@ -1369,22 +1367,22 @@ body.dark .toast {
   font-size: 11px;
   font-weight: 700;
   font-style: normal;
-  
-  /* เพิ่มเส้นขอบ (Border) สีเดียวกับ Sidebar เพื่อให้เห็นขอบแต่ละรูปชัดเจนเมื่อซ้อน */
-  border: 2px solid var(--sidebar); /* หรือใช้สี #24233a */
-  
+  border: 2px solid var(--sidebar);
   position: relative;
   cursor: pointer;
-  transition: transform 0.15s ease, z-index 0.15s ease, box-shadow 0.15s ease;
-  flex-shrink: 0; /* ป้องกันรูปถูกบีบ */
+  transition: transform 0.15s ease, z-index 0.15s ease;
+  flex-shrink: 0;
 }
 
-/* เมื่อเอาเมาส์ไปชี้ (Hover) ให้รูปนั้นลอยขึ้นมาเด่น */
+/* ดึงรูปถัดไปให้ซ้อนทับรูปก่อนหน้า */
+.avatar-stack > * + * {
+  margin-left: -10px;
+}
+
 .avatar-stack span:hover,
 .avatar-stack i:hover {
-  transform: translateY(-3px) scale(1.15); /* ลอยขึ้นและขยายใหญ่เล็กน้อย */
-  z-index: 10; /* ดันให้อยู่ชั้นบนสุดของรูปอื่นๆ */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* เพิ่มเงาให้ดูมีมิติ */
+  transform: translateY(-2px) scale(1.15);
+  z-index: 10;
 }
 
 /* กล่อง ข้อความชื่อเมื่อ Hover */

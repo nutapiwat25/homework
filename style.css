@@ -1346,4 +1346,74 @@ body.dark .toast {
     font-size: 10px;
   }
 }
-/*test*/
+/* Custom Tooltip แบบ Google Style สำหรับรูปสมาชิก */
+.avatar-stack {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.avatar-stack span,
+.avatar-stack i {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s ease, z-index 0.15s ease;
+}
+
+.avatar-stack span:hover,
+.avatar-stack i:hover {
+  transform: translateY(-2px) scale(1.1);
+  z-index: 10;
+}
+
+/* กล่อง ข้อความชื่อเมื่อ Hover */
+.avatar-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%; /* ลอยอยู่เหนือ Avatar */
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  background: rgba(23, 22, 37, 0.92);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  z-index: 100;
+}
+
+/* สร้อย/ลูกศรชี้ลงของ Tooltip */
+.avatar-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 105%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: rgba(23, 22, 37, 0.92) transparent transparent transparent;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+  z-index: 100;
+}
+
+/* เมื่อเอาเมาส์ไปชี้ (Hover) ให้แสดง Tooltip */
+.avatar-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+.avatar-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+}

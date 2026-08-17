@@ -218,15 +218,24 @@ function renderGroup() {
   $("#groupInitial").textContent = initials(data.name);
   $("#inviteCode").textContent = data.inviteCode;
   const members = Object.entries(data.members || {});
+
+  // ปรับปรุงตรงนี้: เพิ่ม data-tooltip และ class เพื่อทำ Tooltip สไตล์ Google
   $("#memberAvatars").innerHTML =
     members
       .slice(0, 5)
-      .map(([_, n]) => `<span title="${esc(n)}">${esc(initials(n))}</span>`)
-      .join("") + (members.length > 5 ? `<i>+${members.length - 5}</i>` : "");
+      .map(
+        ([_, n]) =>
+          `<span class="avatar-tooltip" title="${esc(n)}" data-tooltip="${esc(n)}">${esc(initials(n))}</span>`
+      )
+      .join("") +
+    (members.length > 5
+      ? `<i class="avatar-tooltip" title="อีก ${members.length - 5} คน" data-tooltip="อีก ${members.length - 5} คน">+${members.length - 5}</i>`
+      : "");
+
   $("#taskAssignee").innerHTML = `<option value="">ยังไม่มอบหมาย</option>${members
     .map(
       ([id, n]) =>
-        `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`,
+        `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`
     )
     .join("")}`;
 }
@@ -991,4 +1000,3 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
 };
-//test

@@ -715,35 +715,6 @@ function initTheme() {
   document.body.classList.toggle("dark", isDark);
   $("#themeToggle").textContent = isDark ? "☀" : "☾";
 }
-// เพิ่มฟังก์ชันสำหรับแสดง Modal รายชื่อสมาชิก
-function showMembersModal() {
-  const members = Object.entries(group?.data()?.members || {});
-  const count = members.length;
-
-  $("#membersModalTitle").textContent = `สมาชิกทั้งหมด (${count} คน)`;
-
-  const listHtml = members.length
-    ? members
-        .map(([id, name]) => {
-          const isMe = id === user?.uid;
-          return `
-            <div class="member-item-row">
-              <span class="avatar-sm">${esc(initials(name))}</span>
-              <div class="member-item-info">
-                <strong>${esc(name)} ${isMe ? '<span class="me-tag">(คุณ)</span>' : ''}</strong>
-              </div>
-            </div>
-          `;
-        })
-        .join("")
-    : '<p class="tiny-empty">ไม่พบข้อมูลสมาชิก</p>';
-
-  $("#membersModalList").innerHTML = listHtml;
-  openModal("membersModal");
-}
-
-// เปลี่ยน Event Listener ของปุ่มดูสมาชิกทั้งหมด
-$("#openMembers").onclick = showMembersModal;
 
 $("#themeToggle").onclick = () => {
   const isDark = document.body.classList.toggle("dark");

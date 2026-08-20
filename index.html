@@ -347,6 +347,23 @@
       </section>
     </div>
 
+        <!-- Modal แสดงสมาชิกทั้งหมด -->
+    <div class="modal-backdrop" id="membersModal">
+      <section class="task-modal compact-modal" role="dialog" aria-modal="true">
+        <button class="close-modal" data-close="membersModal" aria-label="ปิด">×</button>
+        <div class="modal-title">
+          <span class="modal-symbol">👥</span>
+          <div>
+            <p>สมาชิกในกลุ่ม</p>
+            <h2 id="membersModalTitle">สมาชิกทั้งหมด</h2>
+          </div>
+        </div>
+        <div id="membersModalList" class="members-modal-list">
+          <!-- รายชื่อสมาชิกจะแสดงที่นี่ -->
+        </div>
+      </section>
+    </div>
+
     <div class="modal-backdrop" id="detailModal">
       <section class="task-modal" role="dialog" aria-modal="true">
         <button class="close-modal" data-close="detailModal" aria-label="ปิด">×</button>

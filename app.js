@@ -219,7 +219,7 @@ function renderGroup() {
   $("#inviteCode").textContent = data.inviteCode;
   const members = Object.entries(data.members || {});
 
-  // ปรับปรุงตรงนี้: เพิ่ม data-tooltip และ class เพื่อทำ Tooltip สไตล์ Google
+  // ปรับปรุง Tooltip สมาชิก
   $("#memberAvatars").innerHTML =
     members
       .slice(0, 5)
@@ -232,12 +232,21 @@ function renderGroup() {
       ? `<i class="avatar-tooltip" title="อีก ${members.length - 5} คน" data-tooltip="อีก ${members.length - 5} คน">+${members.length - 5}</i>`
       : "");
 
-  $("#taskAssignee").innerHTML = `<option value="">ยังไม่มอบหมาย</option>${members
-    .map(
-      ([id, n]) =>
-        `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`
-    )
-    .join("")}`;
+  // -------------------------------------------------------------
+  // 🔥 ปรับเพิ่มตรงนี้: แสดงทุกคนในกลุ่มลงใน Dropdown ผู้รับผิดชอบ
+  // -------------------------------------------------------------
+  const allMembersOptions = members
+    .map(([id, n]) => {
+      const isMe = id === user.uid;
+      // แสดงชื่อสมาชิกทุกคน หากเป็นตัวเองจะกำกับไว้ว่า (ฉัน) เพื่อความชัดเจน
+      return `<option value="${id}">${esc(n)}${isMe ? " (ฉัน)" : ""}</option>`;
+    })
+    .join("");
+
+  $("#taskAssignee").innerHTML = `
+    <option value="">ทุกคน / ยังไม่มอบหมาย</option>
+    ${allMembersOptions}
+  `;
 }
 
 async function ensureInvite(data) {

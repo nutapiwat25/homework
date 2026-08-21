@@ -452,7 +452,7 @@ function renderTasks() {
               <span class="task-title">${esc(t.title)}</span>
               <span class="task-meta">
                 <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-                <span class="assignee">${esc(t.assigneeName || "งานกลุ่ม")}</span>
+                <span class="assignee">${esc(t.assigneeName || "ทุกคน")}</span>
                 <span class="due-date">◷ ${due(t)}</span>
               </span>
               <div class="task-completed-status">

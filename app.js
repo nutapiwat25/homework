@@ -952,13 +952,13 @@ document.querySelectorAll(".nav-item").forEach(
 
 $("#logoutButton").onclick = () => signOut(auth);
 
+// ของใหม่ (แสดงชื่อสมาชิกทั้งหมดใน Toast)
 $("#openMembers").onclick = () => {
   const membersObj = group?.data()?.members || {};
-  const memberList = Object.entries(membersObj)
-    .map(([uid, name], index) => `${index + 1}. ${name}${uid === user?.uid ? " (ฉัน)" : ""}`)
-    .join("\n");
-    
-  alert(`รายชื่อสมาชิกทั้งหมด (${Object.keys(membersObj).length} คน):\n\n${memberList || "ไม่มีข้อมูล"}`);
+  const names = Object.values(membersObj).join(", ");
+  const count = Object.keys(membersObj).length;
+  
+  toast(`สมาชิก (${count} คน): ${names || "ไม่มีข้อมูล"}`);
 };
 
 $("#todayLabel").textContent = new Intl.DateTimeFormat("th-TH", {

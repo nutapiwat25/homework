@@ -444,6 +444,8 @@ function renderTasks() {
 
           const isMyView = activeFilter === "mine";
           const isDoneByMe = completedUids.includes(user?.uid);
+          const scoreHtml = t.score ? `<p><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` : "";
+          const platformHtml = t.platform ? `<p><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` : "";
 
           return `
           <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
@@ -631,9 +633,13 @@ function openTask(id) {
     $("#taskPriority").value = t.priority || "medium";
     $("#taskLink").value = t.link || "";
     $("#taskNote").value = t.note || "";
+    $("#taskPlatform").value = t.platform || "MS Teams";
+    $("#taskScore").value = t.score !== undefined ? t.score : "";
   } else {
     $("#taskSection").value = "section650001";
     $("#taskDue").value = today();
+    $("#taskPlatform").value = "MS Teams";
+    $("#taskScore").value = "";
   }
   openModal("taskModal");
 }
@@ -648,6 +654,8 @@ async function showDetail(id) {
     : "";
 
   const isDoneByMe = (t.completedBy || []).includes(user?.uid);
+  const scoreHtml = t.score ? `<p><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` : "";
+  const platformHtml = t.platform ? `<p><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` : "";
 
   $("#taskDetail").innerHTML = `
     <div class="detail-head">
@@ -762,6 +770,8 @@ $("#taskForm").onsubmit = async (e) => {
       due: $("#taskDue").value,
       priority: $("#taskPriority").value,
       link: $("#taskLink") ? $("#taskLink").value.trim() : "",
+      platform: $("#taskPlatform").value,
+      score: $("#taskScore").value !== "" ? Number($("#taskScore").value) : 0,
       note: $("#taskNote").value.trim(),
       assigneeId: assignee || "",
       assigneeName: members[assignee] || "",

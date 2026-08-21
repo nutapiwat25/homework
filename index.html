@@ -303,6 +303,20 @@
             </label>
           </div>
 
+          <!-- แทรกต่อจากบรรทัดช่อง "ความสำคัญ" และ "ลิงก์แนบ" -->
+          <div class="form-row">
+            <label>ช่องทางการส่งงาน
+              <select id="taskPlatform">
+                <option value="MS Teams">MS Teams</option>
+                <option value="Moodle">Moodle</option>
+                <option value="Line">Line</option>
+              </select>
+            </label>
+            <label>คะแนน
+              <input id="taskScore" type="number" min="0" step="0.5" placeholder="เช่น 10" />
+            </label>
+          </div>
+
           <label>รายละเอียดเพิ่มเติม
             <textarea
               id="taskNote"

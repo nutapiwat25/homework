@@ -445,6 +445,10 @@ function renderTasks() {
           const isMyView = activeFilter === "mine";
           const isDoneByMe = completedUids.includes(user?.uid);
 
+          // แท็กแสดงคะแนนและแพลตฟอร์ม
+          const platformPill = t.platform ? `<span class="subject-pill" style="background: rgba(102, 88, 232, 0.1); color: var(--primary);">📤 ${esc(t.platform)}</span>` : "";
+          const scorePill = (t.score !== undefined && t.score !== "") ? `<span class="subject-pill" style="background: rgba(243, 173, 76, 0.15); color: #d97706;">💯 ${t.score} คะแนน</span>` : "";
+
           return `
           <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
             ${isMyView ? `<button class="check-button" data-action="done">${isDoneByMe ? "✓" : ""}</button>` : ""}
@@ -452,6 +456,8 @@ function renderTasks() {
               <span class="task-title">${esc(t.title)}</span>
               <span class="task-meta">
                 <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+                ${platformPill}
+                ${scorePill}
                 <span class="assignee">${esc(t.assigneeName || "ทุกคน")}</span>
                 <span class="due-date">◷ ${due(t)}</span>
               </span>
@@ -652,8 +658,14 @@ async function showDetail(id) {
     : "";
 
   const isDoneByMe = (t.completedBy || []).includes(user?.uid);
-  const scoreHtml = t.score ? `<p><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` : "";
-  const platformHtml = t.platform ? `<p><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` : "";
+  
+  // เพิ่มส่วนแสดงผล คะแนน และ ช่องทางการส่งงาน
+  const scoreHtml = (t.score !== undefined && t.score !== "") 
+    ? `<p class="detail-score"><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` 
+    : "";
+  const platformHtml = t.platform 
+    ? `<p class="detail-platform"><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` 
+    : "";
 
   $("#taskDetail").innerHTML = `
     <div class="detail-head">
@@ -661,6 +673,8 @@ async function showDetail(id) {
       <span class="subject-pill subject-ba">${esc(t.section || "section650001")}</span>
       <h2>${esc(t.title)}</h2>
       <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ทุกคน")}</b> · ส่ง ${due(t)}</p>
+      ${platformHtml}
+      ${scoreHtml}
       ${linkHtml}
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
       <button id="detailDone" class="secondary-button">${isDoneByMe ? "ยกเลิกทำเครื่องหมายเสร็จ" : "ทำเครื่องหมายว่าเสร็จ"}</button>

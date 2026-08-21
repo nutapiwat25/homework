@@ -952,8 +952,14 @@ document.querySelectorAll(".nav-item").forEach(
 
 $("#logoutButton").onclick = () => signOut(auth);
 
-$("#openMembers").onclick = () =>
-  toast(`กลุ่มนี้มี ${Object.keys(group?.data()?.members || {}).length} สมาชิก`);
+$("#openMembers").onclick = () => {
+  const membersObj = group?.data()?.members || {};
+  const memberList = Object.entries(membersObj)
+    .map(([uid, name], index) => `${index + 1}. ${name}${uid === user?.uid ? " (ฉัน)" : ""}`)
+    .join("\n");
+    
+  alert(`รายชื่อสมาชิกทั้งหมด (${Object.keys(membersObj).length} คน):\n\n${memberList || "ไม่มีข้อมูล"}`);
+};
 
 $("#todayLabel").textContent = new Intl.DateTimeFormat("th-TH", {
   weekday: "long",

@@ -219,34 +219,25 @@ function renderGroup() {
   $("#inviteCode").textContent = data.inviteCode;
   const members = Object.entries(data.members || {});
 
-  // ปรับปรุง Tooltip สมาชิก
+  // ปรับปรุงตรงนี้: เพิ่ม data-tooltip และ class เพื่อทำ Tooltip สไตล์ Google
   $("#memberAvatars").innerHTML =
     members
       .slice(0, 5)
       .map(
         ([_, n]) =>
-          `<span class="avatar-tooltip" title="${esc(n)}" data-tooltip="${esc(n)}">${esc(initials(n))}</span>`
+          `<span class="avatar-tooltip" title="${esc(n)}" data-tooltip="${esc(n)}">${esc(initials(n))}</span>`,
       )
       .join("") +
     (members.length > 5
       ? `<i class="avatar-tooltip" title="อีก ${members.length - 5} คน" data-tooltip="อีก ${members.length - 5} คน">+${members.length - 5}</i>`
       : "");
 
-  // -------------------------------------------------------------
-  // 🔥 ปรับเพิ่มตรงนี้: แสดงทุกคนในกลุ่มลงใน Dropdown ผู้รับผิดชอบ
-  // -------------------------------------------------------------
-  const allMembersOptions = members
-    .map(([id, n]) => {
-      const isMe = id === user.uid;
-      // แสดงชื่อสมาชิกทุกคน หากเป็นตัวเองจะกำกับไว้ว่า (ฉัน) เพื่อความชัดเจน
-      return `<option value="${id}">${esc(n)}${isMe ? " (ฉัน)" : ""}</option>`;
-    })
-    .join("");
-
-  $("#taskAssignee").innerHTML = `
-    <option value="">ทุกคน / ยังไม่มอบหมาย</option>
-    ${allMembersOptions}
-  `;
+  $("#taskAssignee").innerHTML = `<option value="">ทุกคน</option>${members
+    .map(
+      ([id, n]) =>
+        `<option value="${id}">${esc(n)}${id === user.uid ? " (ฉัน)" : ""}</option>`,
+    )
+    .join("")}`;
 }
 
 async function ensureInvite(data) {
@@ -610,7 +601,7 @@ function renderCalendarTasks() {
                 <span class="task-title">${esc(t.title)}</span>
                 <span class="task-meta">
                   <span class="subject-pill subject-cs">${esc(t.subject)}</span>
-                  <span class="assignee">${esc(t.assigneeName || "ยังไม่มอบหมาย")}</span>
+                  <span class="assignee">${esc(t.assigneeName || "ทุกคน")}</span>
                   <span class="due-date">◷ ${due(t)}</span>
                 </span>
                 ${doneText}
@@ -663,7 +654,7 @@ async function showDetail(id) {
       <span class="subject-pill subject-cs">${esc(t.subject)}</span>
       <span class="subject-pill subject-ba">${esc(t.section || "section650001")}</span>
       <h2>${esc(t.title)}</h2>
-      <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ยังไม่มอบหมาย")}</b> · ส่ง ${due(t)}</p>
+      <p>รับผิดชอบโดย <b>${esc(t.assigneeName || "ทุกคน")}</b> · ส่ง ${due(t)}</p>
       ${linkHtml}
       <div class="detail-note">${esc(t.note || "ไม่มีรายละเอียดเพิ่มเติม").replace(/\n/g, "<br>")}</div>
       <button id="detailDone" class="secondary-button">${isDoneByMe ? "ยกเลิกทำเครื่องหมายเสร็จ" : "ทำเครื่องหมายว่าเสร็จ"}</button>
@@ -966,7 +957,7 @@ $("#openMembers").onclick = () => {
   const membersObj = group?.data()?.members || {};
   const names = Object.values(membersObj).join(", ");
   const count = Object.keys(membersObj).length;
-  
+
   toast(`สมาชิก (${count} คน): ${names || "ไม่มีข้อมูล"}`);
 };
 

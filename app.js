@@ -444,8 +444,6 @@ function renderTasks() {
 
           const isMyView = activeFilter === "mine";
           const isDoneByMe = completedUids.includes(user?.uid);
-          const scoreHtml = t.score ? `<p><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` : "";
-          const platformHtml = t.platform ? `<p><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` : "";
 
           return `
           <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">

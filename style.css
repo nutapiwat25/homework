@@ -1287,6 +1287,7 @@ body.dark .toast {
 
   .topbar {
     height: 60px;
+    font-size: 16px;
   }
 
   .page {
@@ -1434,58 +1435,4 @@ body.dark .toast {
 .avatar-tooltip:hover::before {
   opacity: 1;
   visibility: visible;
-}
-/* ==========================================
-   ปรับแต่ง Responsive Topbar สำหรับมือถือ
-   ========================================== */
-@media (max-width: 600px) {
-  /* จัดเลย์เอาต์หลักของ Topbar ให้กระจายตัวพอดีหน้าจอ */
-  .topbar, 
-  .top-nav, 
-  header .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    gap: 6px;
-    overflow-x: auto; /* ป้องกันองค์ประกอบล้นจอนอกพื้นที่ */
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* ปรับส่วนชื่อกลุ่ม/ breadcrumb ไม่ให้ข้อความพับเบียดกัน */
-  .group-info, 
-  .breadcrumb, 
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    white-space: nowrap;
-    font-size: 0.85rem;
-    line-height: 1.2;
-    flex-shrink: 0;
-  }
-
-  /* ปรับขนาดปุ่มบน Topbar ให้กะทัดรัดขึ้น */
-  .topbar button, 
-  .topbar .btn, 
-  .nav-button {
-    padding: 6px 10px !important;
-    font-size: 0.8rem !important;
-    white-space: nowrap;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
-
-  /* ซ่อนข้อความยาวๆ ในปุ่ม เหลือไว้เฉพาะไอคอนบนมือถือ (ถ้ามี) */
-  .btn-text-mobile-hide {
-    display: none;
-  }
-
-  /* ปรับขนาดโปรไฟล์และปุ่มสลับธีม */
-  .avatar, 
-  .theme-toggle {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px;
-    flex-shrink: 0;
-  }
 }

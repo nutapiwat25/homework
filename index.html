@@ -27,15 +27,30 @@
         <form id="authForm">
           <label class="name-field hidden">
             ชื่อที่แสดง
-            <input id="displayName" maxlength="32" placeholder="เช่น มายด์ CS66" />
+            <input
+              id="displayName"
+              maxlength="32"
+              placeholder="เช่น มายด์ CS66"
+            />
           </label>
           <label>
             อีเมลมหาวิทยาลัย
-            <input id="email" type="email" required placeholder="you@university.ac.th" />
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="you@university.ac.th"
+            />
           </label>
           <label>
             รหัสผ่าน
-            <input id="password" type="password" required minlength="6" placeholder="อย่างน้อย 6 ตัวอักษร" />
+            <input
+              id="password"
+              type="password"
+              required
+              minlength="6"
+              placeholder="อย่างน้อย 6 ตัวอักษร"
+            />
           </label>
           <p class="form-error" id="authError"></p>
           <button class="primary-button full" type="submit" id="authSubmit">
@@ -98,15 +113,32 @@
 
       <main class="main-content">
         <header class="topbar">
-          <button class="mobile-menu" id="mobileMenu" aria-label="เปิดเมนู">☰</button>
+          <button class="mobile-menu" id="mobileMenu" aria-label="เปิดเมนู">
+            ☰
+          </button>
           <div class="crumbs">
             <span id="groupNameHeader">กลุ่มของฉัน</span><b>/</b>
             <strong id="viewTitle">ภาพรวม</strong>
           </div>
           <div class="topbar-actions">
-            <a class="invite-button" href="https://drive.google.com/drive/folders/1dETNHRHUoxdvxleJH7clcnoDLV6fYb43" target="_blank" rel="noopener noreferrer" style="text-decoration: none;"><span>📁</span> <span>ไฟล์งาน</span></a>
-            <button class="invite-button" id="inviteButton"><span>♧</span> <span>ชวนเพื่อน</span></button>
-            <button class="icon-button" id="themeToggle" aria-label="เปลี่ยนธีม">☾</button>
+            <a
+              class="invite-button"
+              href="https://drive.google.com/drive/folders/1dETNHRHUoxdvxleJH7clcnoDLV6fYb43"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="text-decoration: none"
+              ><span>📁</span> <span>ไฟล์งาน</span></a
+            >
+            <button class="invite-button" id="inviteButton">
+              <span>♧</span> <span>ชวนเพื่อน</span>
+            </button>
+            <button
+              class="icon-button"
+              id="themeToggle"
+              aria-label="เปลี่ยนธีม"
+            >
+              ☾
+            </button>
             <span class="top-avatar" id="topAvatar">P</span>
           </div>
         </header>
@@ -167,14 +199,26 @@
               </div>
               <div class="toolbar">
                 <div class="filter-tabs">
-                  <button class="filter-tab active" data-filter="all">ทั้งหมด</button>
-                  <button class="filter-tab" data-filter="mine">งานของฉัน</button>
-                  <button class="filter-tab" data-filter="week">สัปดาห์นี้</button>
-                  <button class="filter-tab" data-filter="done">เสร็จแล้ว</button>
+                  <button class="filter-tab active" data-filter="all">
+                    ทั้งหมด
+                  </button>
+                  <button class="filter-tab" data-filter="mine">
+                    งานของฉัน
+                  </button>
+                  <button class="filter-tab" data-filter="week">
+                    สัปดาห์นี้
+                  </button>
+                  <button class="filter-tab" data-filter="done">
+                    เสร็จแล้ว
+                  </button>
                 </div>
                 <label class="search-box">
                   <span>⌕</span>
-                  <input id="searchInput" type="search" placeholder="ค้นหางาน..." />
+                  <input
+                    id="searchInput"
+                    type="search"
+                    placeholder="ค้นหางาน..."
+                  />
                 </label>
               </div>
               <div class="task-list" id="taskList"></div>
@@ -215,14 +259,19 @@
                 <p>คลิกเลือกวันที่เพื่อดูรายการงานกำหนดส่งในวันนั้น</p>
               </div>
               <div class="calendar-nav">
-                <button class="secondary-button" id="prevMonth">‹ เดือนก่อนหน้า</button>
+                <button class="secondary-button" id="prevMonth">
+                  ‹ เดือนก่อนหน้า
+                </button>
                 <button class="secondary-button" id="todayMonth">วันนี้</button>
-                <button class="secondary-button" id="nextMonth">เดือนถัดไป ›</button>
+                <button class="secondary-button" id="nextMonth">
+                  เดือนถัดไป ›
+                </button>
               </div>
             </div>
 
             <div class="calendar-week">
-              <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+              <span>อา</span><span>จ</span><span>อ</span><span>พ</span
+              ><span>พฤ</span><span>ศ</span><span>ส</span>
             </div>
             <div class="calendar-days" id="calendarGrid"></div>
 
@@ -233,13 +282,15 @@
             </div>
           </div>
 
-          <div class="card-surface task-section" style="margin-top: 20px;">
+          <div class="card-surface task-section" style="margin-top: 20px">
             <div class="section-heading">
               <div>
                 <h2 id="selectedDateTitle">งานกำหนดส่งวันนี้</h2>
                 <p id="selectedDateSub">รายการงานตามวันที่เลือกในปฏิทิน</p>
               </div>
-              <button class="text-button" id="clearDateFilter">แสดงงานทั้งหมดในเดือนนี้</button>
+              <button class="text-button" id="clearDateFilter">
+                แสดงงานทั้งหมดในเดือนนี้
+              </button>
             </div>
             <div class="task-list" id="calendarTaskList"></div>
           </div>
@@ -253,7 +304,11 @@
                 <p>ประวัติการสร้าง แก้ไข และอัปเดตงานของสมาชิก</p>
               </div>
             </div>
-            <div id="fullActivityList" class="activity-list" style="margin-top: 18px;"></div>
+            <div
+              id="fullActivityList"
+              class="activity-list"
+              style="margin-top: 18px"
+            ></div>
           </div>
         </section>
       </main>
@@ -261,7 +316,9 @@
 
     <div class="modal-backdrop" id="taskModal">
       <section class="task-modal" role="dialog" aria-modal="true">
-        <button class="close-modal" data-close="taskModal" aria-label="ปิด">×</button>
+        <button class="close-modal" data-close="taskModal" aria-label="ปิด">
+          ×
+        </button>
         <div class="modal-title">
           <span class="modal-symbol">✦</span>
           <div>
@@ -272,16 +329,34 @@
         <form id="taskForm">
           <input type="hidden" id="taskId" />
 
-          <label>ชื่องาน
-            <input required id="taskTitle" maxlength="100" placeholder="เช่น สรุปบทที่ 3" />
+          <label
+            >ชื่องาน
+            <input
+              required
+              id="taskTitle"
+              maxlength="100"
+              placeholder="เช่น สรุปบทที่ 3"
+            />
           </label>
 
           <div class="form-row">
-            <label>รายวิชา
-              <input required id="taskSubject" maxlength="50" placeholder="เช่น CS101" />
+            <label
+              >รายวิชา
+              <input
+                required
+                id="taskSubject"
+                maxlength="50"
+                placeholder="เช่น CS101"
+              />
             </label>
-            <label>Section
-              <input id="taskSection" maxlength="20" placeholder="เช่น section650001" value="section650001" />
+            <label
+              >Section
+              <input
+                id="taskSection"
+                maxlength="20"
+                placeholder="เช่น section650001"
+                value="section650001"
+              />
             </label>
           </div>
 
@@ -291,33 +366,48 @@
           </div>
 
           <div class="form-row">
-            <label>ความสำคัญ
+            <label
+              >ความสำคัญ
               <select id="taskPriority">
                 <option value="high">สำคัญมาก</option>
                 <option value="medium" selected>ปกติ</option>
                 <option value="low">ไม่เร่งด่วน</option>
               </select>
             </label>
-            <label>ลิงก์แนบ (Google Drive / Canva / ฯลฯ)
-              <input id="taskLink" type="url" placeholder="https://drive.google.com/..." />
+            <label
+              >ลิงก์แนบ (Google Drive / Canva / ฯลฯ)
+              <input
+                id="taskLink"
+                type="url"
+                placeholder="https://drive.google.com/..."
+              />
             </label>
           </div>
 
           <!-- แทรกต่อจากบรรทัดช่อง "ความสำคัญ" และ "ลิงก์แนบ" -->
           <div class="form-row">
-            <label>ช่องทางการส่งงาน
+            <label
+              >ช่องทางการส่งงาน
               <select id="taskPlatform">
                 <option value="MS Teams">MS Teams</option>
                 <option value="Moodle">Moodle</option>
                 <option value="Line">Line</option>
               </select>
             </label>
-            <label>คะแนน
-              <input id="taskScore" type="number" min="0" step="0.5" placeholder="เช่น 10" />
+            <label
+              >คะแนน
+              <input
+                id="taskScore"
+                type="number"
+                min="0"
+                step="0.5"
+                placeholder="เช่น 10"
+              />
             </label>
           </div>
 
-          <label>รายละเอียดเพิ่มเติม
+          <label
+            >รายละเอียดเพิ่มเติม
             <textarea
               id="taskNote"
               rows="3"
@@ -327,7 +417,13 @@
           </label>
 
           <div class="modal-actions">
-            <button type="button" class="secondary-button" data-close="taskModal">ยกเลิก</button>
+            <button
+              type="button"
+              class="secondary-button"
+              data-close="taskModal"
+            >
+              ยกเลิก
+            </button>
             <button class="primary-button" type="submit">บันทึกงาน</button>
           </div>
         </form>
@@ -336,7 +432,9 @@
 
     <div class="modal-backdrop" id="inviteModal">
       <section class="task-modal compact-modal" role="dialog" aria-modal="true">
-        <button class="close-modal" data-close="inviteModal" aria-label="ปิด">×</button>
+        <button class="close-modal" data-close="inviteModal" aria-label="ปิด">
+          ×
+        </button>
         <div class="modal-title">
           <span class="modal-symbol">♧</span>
           <div>
@@ -351,10 +449,19 @@
         <button class="primary-button full" id="copyInvite">
           คัดลอกรหัสเชิญ
         </button>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--line);" />
-        <h3 style="font-size: 14px; margin: 0 0 10px; color: var(--text);">เข้าร่วมกลุ่มด้วยรหัส</h3>
+        <hr
+          style="margin: 20px 0; border: 0; border-top: 1px solid var(--line)"
+        />
+        <h3 style="font-size: 14px; margin: 0 0 10px; color: var(--text)">
+          เข้าร่วมกลุ่มด้วยรหัส
+        </h3>
         <form id="joinForm" class="join-form">
-          <input id="joinCode" maxlength="6" placeholder="เช่น A1B2C3" required />
+          <input
+            id="joinCode"
+            maxlength="6"
+            placeholder="เช่น A1B2C3"
+            required
+          />
           <button class="secondary-button" type="submit">เข้าร่วม</button>
         </form>
         <p class="form-error" id="joinError"></p>
@@ -363,7 +470,9 @@
 
     <div class="modal-backdrop" id="detailModal">
       <section class="task-modal" role="dialog" aria-modal="true">
-        <button class="close-modal" data-close="detailModal" aria-label="ปิด">×</button>
+        <button class="close-modal" data-close="detailModal" aria-label="ปิด">
+          ×
+        </button>
         <div id="taskDetail"></div>
         <div class="comments">
           <h3>ความคิดเห็น</h3>

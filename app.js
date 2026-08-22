@@ -446,8 +446,13 @@ function renderTasks() {
           const isDoneByMe = completedUids.includes(user?.uid);
 
           // แท็กแสดงคะแนนและแพลตฟอร์ม
-          const platformPill = t.platform ? `<span class="subject-pill" style="background: rgba(102, 88, 232, 0.1); color: var(--primary);">📤 ${esc(t.platform)}</span>` : "";
-          const scorePill = (t.score !== undefined && t.score !== "") ? `<span class="subject-pill" style="background: rgba(243, 173, 76, 0.15); color: #d97706;">💯 ${t.score} คะแนน</span>` : "";
+          const platformPill = t.platform
+            ? `<span class="subject-pill" style="background: rgba(102, 88, 232, 0.1); color: var(--primary);">📤 ${esc(t.platform)}</span>`
+            : "";
+          const scorePill =
+            t.score !== undefined && t.score !== ""
+              ? `<span class="subject-pill" style="background: rgba(243, 173, 76, 0.15); color: #d97706;">💯 ${t.score} คะแนน</span>`
+              : "";
 
           return `
           <article class="task-item ${isDoneByMe ? "done" : ""}" data-id="${t.id}">
@@ -658,13 +663,14 @@ async function showDetail(id) {
     : "";
 
   const isDoneByMe = (t.completedBy || []).includes(user?.uid);
-  
+
   // เพิ่มส่วนแสดงผล คะแนน และ ช่องทางการส่งงาน
-  const scoreHtml = (t.score !== undefined && t.score !== "") 
-    ? `<p class="detail-score"><b>💯 คะแนน:</b> ${t.score} คะแนน</p>` 
-    : "";
-  const platformHtml = t.platform 
-    ? `<p class="detail-platform"><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>` 
+  const scoreHtml =
+    t.score !== undefined && t.score !== ""
+      ? `<p class="detail-score"><b>💯 คะแนน:</b> ${t.score} คะแนน</p>`
+      : "";
+  const platformHtml = t.platform
+    ? `<p class="detail-platform"><b>📤 ส่งใน:</b> ${esc(t.platform)}</p>`
     : "";
 
   $("#taskDetail").innerHTML = `

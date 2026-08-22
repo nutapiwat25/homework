@@ -1559,11 +1559,6 @@ body.dark .toast {
     font-size: 11px;
   }
 
-  /* ซ่อนตัวหนังสือในปุ่ม "ไฟล์งาน" และ "ชวนเพื่อน" เหลือไว้เฉพาะไอคอนบนจอเล็กมากๆ */
-  .invite-button span:last-child {
-    display: none;
-  }
-
   .icon-button {
     width: 32px;
     height: 32px;

@@ -1536,7 +1536,11 @@ body.dark .toast {
   }
 
   .crumbs {
-    display: none;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px; /* จำกัดความกว้างไม่ให้ดันปุ่มอื่น */
   }
 
   .crumbs span,

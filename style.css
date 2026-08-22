@@ -1530,16 +1530,13 @@ body.dark .toast {
     background: transparent;
     font-size: 20px;
     color: var(--text);
-    padding: 4px;
+    padding: 2px 4px;
     cursor: pointer;
+    flex-shrink: 0;
   }
 
   .crumbs {
-    font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px; /* จำกัดความกว้างไม่ให้ดันปุ่มอื่น */
+    display: none;
   }
 
   .crumbs span,
@@ -1551,30 +1548,41 @@ body.dark .toast {
   .topbar-actions {
     gap: 6px;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
 
   /* 4. ปรับขนาดปุ่มบนมือถือให้เล็กลง และซ่อนตัวหนังสือบางปุ่ม */
   .invite-button {
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .invite-button span {
+    display: inline-block; /* มั่นใจว่าตัวหนังสือยังแสดงผลอยู่ */
   }
 
   .icon-button {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+    flex-shrink: 0;
   }
 
   .top-avatar {
     width: 28px;
     height: 28px;
     font-size: 10px;
+    flex-shrink: 0;
   }
 
   .topbar {
     height: 58px;
-    padding: 0 12px;
-    gap: 8px;
+    padding: 0 10px;
+    gap: 6px;
+    justify-content: space-between;
   }
 
   .page {

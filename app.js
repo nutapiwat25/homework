@@ -786,7 +786,7 @@ $("#taskForm").onsubmit = async (e) => {
       members = (group.data && group.data().members) || {};
 
     const taskTitle = $("#taskTitle").value.trim();
-    const data = {
+    const baseData = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
       section: $("#taskSection")
@@ -798,30 +798,59 @@ $("#taskForm").onsubmit = async (e) => {
       platform: $("#taskPlatform").value,
       score: $("#taskScore").value !== "" ? Number($("#taskScore").value) : 0,
       note: $("#taskNote").value.trim(),
-      assigneeId: assignee || "",
-      assigneeName: members[assignee] || "",
       updatedAt: serverTimestamp(),
       updatedByName: nameOf(),
     };
 
     if (id) {
+      // กรณีแก้ไขงานเดิม
+      const data = {
+        ...baseData,
+        assigneeId: assignee || "",
+        assigneeName: assignee ? (members[assignee] || "") : "ทุกคน",
+      };
       await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
       await logActivity("แก้ไขงาน", taskTitle);
+      toast("อัปเดตงานแล้ว");
     } else {
-      await addDoc(collection(db, "groups", group.id, "tasks"), {
-        ...data,
-        status: "todo",
-        completedBy: [],
-        createdBy: user ? user.uid : "",
-        createdByName: nameOf(),
-        createdAt: serverTimestamp(),
-      });
-      await logActivity("สร้างงานใหม่", taskTitle);
+      // กรณีสร้างงานใหม่
+      if (!assignee) {
+        // --- เลือก "ทุกคน" : ระบบจะวนลูปแจกงานให้สมาชิกทุกคนในกลุ่ม ---
+        const memberEntries = Object.entries(members);
+        const promises = memberEntries.map(([mUid, mName]) => {
+          return addDoc(collection(db, "groups", group.id, "tasks"), {
+            ...baseData,
+            assigneeId: mUid,
+            assigneeName: mName,
+            status: "todo",
+            completedBy: [],
+            createdBy: user ? user.uid : "",
+            createdByName: nameOf(),
+            createdAt: serverTimestamp(),
+          });
+        });
+        await Promise.all(promises);
+        await logActivity("สร้างงานใหม่ (มอบหมายทุกคน)", taskTitle);
+        toast(`เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`);
+      } else {
+        // --- เลือกมอบหมายให้คนใดคนหนึ่ง ---
+        await addDoc(collection(db, "groups", group.id, "tasks"), {
+          ...baseData,
+          assigneeId: assignee,
+          assigneeName: members[assignee] || "",
+          status: "todo",
+          completedBy: [],
+          createdBy: user ? user.uid : "",
+          createdByName: nameOf(),
+          createdAt: serverTimestamp(),
+        });
+        await logActivity("สร้างงานใหม่", taskTitle);
+        toast("เพิ่มงานใหม่ให้กลุ่มแล้ว");
+      }
     }
 
     closeModal("taskModal");
     $("#taskForm").reset();
-    toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
   } catch (err) {
     console.error("Task Form Error:", err);
     alert(

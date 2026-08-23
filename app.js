@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  sendPasswordResetEmail,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   getFirestore,
@@ -113,7 +114,13 @@ document.querySelectorAll(".auth-tab").forEach(
       $("#authSubmit").textContent = registerMode
         ? "สร้างบัญชีและเริ่มกลุ่ม"
         : "เข้าสู่ระบบ";
+      
+      // ล้างข้อความและรีเซ็ตสีแจ้งเตือน
       $("#authError").textContent = "";
+      $("#authError").style.color = "#f06f68";
+      
+      // ซ่อนปุ่มลืมรหัสผ่านเมื่ออยู่ในหน้าสมัครสมาชิก
+      $("#forgotPasswordBtn").style.display = registerMode ? "none" : "inline-block";
     }),
 );
 
@@ -1033,4 +1040,29 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "done") toggleDone(id);
   if (b.dataset.action === "edit") openTask(id);
   if (b.dataset.action === "detail") showDetail(id);
+};
+
+// ระบบลืมรหัสผ่าน (Reset Password)
+$("#forgotPasswordBtn").onclick = async () => {
+  const email = $("#email").value.trim();
+  
+  if (!email) {
+    $("#authError").textContent = "กรุณากรอกอีเมลก่อนกดลืมรหัสผ่าน";
+    $("#email").focus();
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    $("#authError").style.color = "#44ac82"; // เปลี่ยนเป็นสีเขียวแจ้งเตือนความสำเร็จ
+    $("#authError").textContent = "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
+  } catch (err) {
+    $("#authError").style.color = "#f06f68"; // สีแดงแจ้งเตือน Error
+    const errMap = {
+      "auth/invalid-email": "รูปแบบอีเมลไม่ถูกต้อง",
+      "auth/user-not-found": "ไม่พบบัญชีผู้ใช้นี้ในระบบ",
+    };
+    $("#authError").textContent =
+      errMap[err.code] || "ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่อีกครั้ง";
+  }
 };

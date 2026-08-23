@@ -409,7 +409,7 @@ function render() {
   ).length;
 
   // --- แสดงผลบน Dashboard ---
-  $("#totalCount").textContent = length;
+  $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
   $("#completedCount").textContent = totalCompleted;
   $("#progressCount").textContent = `${progressPercent}%`;

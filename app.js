@@ -410,7 +410,7 @@ function filtered() {
     const isDone = t.completedBy && t.completedBy.length > 0;
     const ok =
       activeFilter === "all" ||
-      (activeFilter === "mine" && t.assigneeId === user.uid) ||
+      (activeFilter === "mine" && (t.assigneeId === user.uid || !t.assigneeId || t.assigneeName === "ทุกคน")) ||
       (activeFilter === "week" &&
         daysAway(t.due) >= 0 &&
         daysAway(t.due) <= 7) ||

@@ -411,7 +411,7 @@ function render() {
   // --- แสดงผลบน Dashboard ---
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
-  $("#completedCount").textContent = totalCompleted;
+  $("#completedCount").textContent = done;
   $("#progressCount").textContent = `${progressPercent}%`;
   $("#sidebarTaskCount").textContent = myPendingTasks;
   

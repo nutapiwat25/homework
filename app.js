@@ -114,15 +114,13 @@ document.querySelectorAll(".auth-tab").forEach(
       $("#authSubmit").textContent = registerMode
         ? "สร้างบัญชีและเริ่มกลุ่ม"
         : "เข้าสู่ระบบ";
-
+      
       // ล้างข้อความและรีเซ็ตสีแจ้งเตือน
       $("#authError").textContent = "";
       $("#authError").style.color = "#f06f68";
-
+      
       // ซ่อนปุ่มลืมรหัสผ่านเมื่ออยู่ในหน้าสมัครสมาชิก
-      $("#forgotPasswordBtn").style.display = registerMode
-        ? "none"
-        : "inline-block";
+      $("#forgotPasswordBtn").style.display = registerMode ? "none" : "inline-block";
     }),
 );
 
@@ -379,50 +377,27 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  // 1. ดึงข้อมูลสมาชิกทั้งหมดในกลุ่ม
-  const membersObj = (group && group.data && group.data().members) || {};
-  const memberUids = Object.keys(membersObj);
-  const totalMembers = memberUids.length || 1; // กันหารด้วย 0
   const done = tasks.filter(
     (t) => t.completedBy && t.completedBy.length > 0,
   ).length;
-  // 2. งานทั้งหมดแบบนับทุกคนจริงๆ (จำนวนงาน x จำนวนสมาชิก)
-  const totalGroupTasks = tasks.length * totalMembers;
-
-  // 3. นับงานที่สมาชิกทุกคนติ๊กเสร็จแล้วจริงๆ จาก completedBy ของทุก task
-  const totalCompleted = tasks.reduce((sum, t) => {
-    return sum + (t.completedBy ? t.completedBy.length : 0);
-  }, 0);
-
-  // 4. คำนวณเปอร์เซ็นต์ความคืบหน้า
-  const progressPercent = totalGroupTasks
-    ? Math.round((totalCompleted / totalGroupTasks) * 100)
-    : 0;
-
-  // 5. คำนวณงานที่ค้างเฉพาะของ "ผู้ใช้งานปัจจุบัน (User)"
-  const myPendingTasks = tasks.filter(
-    (t) => !t.completedBy || !t.completedBy.includes(user?.uid),
-  ).length;
-
-  // 6. คำนวณงานด่วนเฉพาะของ User (ส่งภายใน 3 วัน)
   const urgent = tasks.filter(
     (t) =>
       (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
       daysAway(t.due) >= 0 &&
       daysAway(t.due) <= 3,
   ).length;
+  const pending = tasks.length - done;
 
-  // --- แสดงผลบน Dashboard ---
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
   $("#completedCount").textContent = done;
-  $("#progressCount").textContent = `${progressPercent}%`;
-  $("#sidebarTaskCount").textContent = myPendingTasks;
-
-  $("#motivation").textContent = myPendingTasks
-    ? `คุณยังมีงานค้างอยู่อีก ${myPendingTasks} งาน ช่วยกันเคลียร์นะ!`
-    : "คุณทำครบทุกงานแล้ว เยี่ยมมาก!";
-
+  $("#progressCount").textContent = tasks.length
+    ? `${Math.round((done / tasks.length) * 100)}%`
+    : "0%";
+  $("#sidebarTaskCount").textContent = pending;
+  $("#motivation").textContent = pending
+    ? `ยังมี ${pending} งานที่กลุ่มช่วยกันจัดการได้`
+    : "เคลียร์ทุกงานแล้ว เยี่ยมมากทั้งกลุ่ม!";
   renderTasks();
   renderDue();
   renderActivity();
@@ -435,10 +410,7 @@ function filtered() {
     const isDone = t.completedBy && t.completedBy.length > 0;
     const ok =
       activeFilter === "all" ||
-      (activeFilter === "mine" &&
-        (t.assigneeId === user.uid ||
-          !t.assigneeId ||
-          t.assigneeName === "ทุกคน")) ||
+      (activeFilter === "mine" && t.assigneeId === user.uid) ||
       (activeFilter === "week" &&
         daysAway(t.due) >= 0 &&
         daysAway(t.due) <= 7) ||
@@ -814,7 +786,7 @@ $("#taskForm").onsubmit = async (e) => {
       members = (group.data && group.data().members) || {};
 
     const taskTitle = $("#taskTitle").value.trim();
-    const baseData = {
+    const data = {
       title: taskTitle,
       subject: $("#taskSubject").value.trim(),
       section: $("#taskSection")
@@ -826,42 +798,30 @@ $("#taskForm").onsubmit = async (e) => {
       platform: $("#taskPlatform").value,
       score: $("#taskScore").value !== "" ? Number($("#taskScore").value) : 0,
       note: $("#taskNote").value.trim(),
+      assigneeId: assignee || "",
+      assigneeName: members[assignee] || "",
       updatedAt: serverTimestamp(),
       updatedByName: nameOf(),
     };
 
     if (id) {
-      // กรณีแก้ไขงานเดิม
-      const data = {
-        ...baseData,
-        assigneeId: assignee || "",
-        assigneeName: assignee ? members[assignee] || "" : "ทุกคน",
-      };
       await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
       await logActivity("แก้ไขงาน", taskTitle);
-      toast("อัปเดตงานแล้ว");
     } else {
-      // กรณีสร้างงานใหม่ (สร้างไฟล์เดียวเสมอ)
       await addDoc(collection(db, "groups", group.id, "tasks"), {
-        ...baseData,
-        assigneeId: assignee || "",
-        assigneeName: assignee ? members[assignee] || "" : "ทุกคน",
+        ...data,
         status: "todo",
         completedBy: [],
         createdBy: user ? user.uid : "",
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
       });
-
-      await logActivity(
-        assignee ? "สร้างงานใหม่" : "สร้างงานใหม่ (ทุกคน)",
-        taskTitle,
-      );
-      toast("เพิ่มงานใหม่เรียบร้อยแล้ว");
+      await logActivity("สร้างงานใหม่", taskTitle);
     }
 
     closeModal("taskModal");
     $("#taskForm").reset();
+    toast(id ? "อัปเดตงานแล้ว" : "เพิ่มงานใหม่ให้กลุ่มแล้ว");
   } catch (err) {
     console.error("Task Form Error:", err);
     alert(
@@ -1085,7 +1045,7 @@ $("#calendarTaskList").onclick = (e) => {
 // ระบบลืมรหัสผ่าน (Reset Password)
 $("#forgotPasswordBtn").onclick = async () => {
   const email = $("#email").value.trim();
-
+  
   if (!email) {
     $("#authError").textContent = "กรุณากรอกอีเมลก่อนกดลืมรหัสผ่าน";
     $("#email").focus();
@@ -1095,8 +1055,7 @@ $("#forgotPasswordBtn").onclick = async () => {
   try {
     await sendPasswordResetEmail(auth, email);
     $("#authError").style.color = "#44ac82"; // เปลี่ยนเป็นสีเขียวแจ้งเตือนความสำเร็จ
-    $("#authError").textContent =
-      "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
+    $("#authError").textContent = "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
   } catch (err) {
     $("#authError").style.color = "#f06f68"; // สีแดงแจ้งเตือน Error
     const errMap = {
@@ -1104,8 +1063,6 @@ $("#forgotPasswordBtn").onclick = async () => {
       "auth/user-not-found": "ไม่พบบัญชีผู้ใช้นี้ในระบบ",
     };
     $("#authError").textContent =
-      errMap[err.code] ||
-      "ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่อีกครั้ง";
+      errMap[err.code] || "ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่อีกครั้ง";
   }
 };
-

@@ -841,43 +841,42 @@ $("#taskForm").onsubmit = async (e) => {
       await logActivity("แก้ไขงาน", taskTitle);
       toast("อัปเดตงานแล้ว");
     } else {
-      // กรณีสร้างงานใหม่
-      if (!assignee) {
-        // --- เลือก "ทุกคน" : ระบบจะวนลูปแจกงานให้สมาชิกทุกคนในกลุ่ม ---
-        const memberEntries = Object.entries(members);
-        const promises = memberEntries.map(([mUid, mName]) => {
-          return addDoc(collection(db, "groups", group.id, "tasks"), {
-            ...baseData,
-            assigneeId: mUid,
-            assigneeName: mName,
-            status: "todo",
-            completedBy: [],
-            createdBy: user ? user.uid : "",
-            createdByName: nameOf(),
-            createdAt: serverTimestamp(),
-          });
-        });
-        await Promise.all(promises);
-        await logActivity("สร้างงานใหม่ (มอบหมายทุกคน)", taskTitle);
-        toast(
-          `เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`,
-        );
-      } else {
-        // --- เลือกมอบหมายให้คนใดคนหนึ่ง ---
-        await addDoc(collection(db, "groups", group.id, "tasks"), {
+    if (!assignee) {
+      // --- เลือก "ทุกคน" : ระบบจะวนลูปแจกงานให้สมาชิกทุกคนในกลุ่ม ---
+      const memberEntries = Object.entries(members);
+      const promises = memberEntries.map(([mUid, mName]) => {
+        return addDoc(collection(db, "groups", group.id, "tasks"), {
           ...baseData,
-          assigneeId: assignee,
-          assigneeName: members[assignee] || "",
+          assigneeId: mUid,
+          assigneeName: mName,
           status: "todo",
           completedBy: [],
           createdBy: user ? user.uid : "",
           createdByName: nameOf(),
           createdAt: serverTimestamp(),
         });
-        await logActivity("สร้างงานใหม่", taskTitle);
-        toast("เพิ่มงานใหม่ให้กลุ่มแล้ว");
-      }
+      });
+      await Promise.all(promises);
+      await logActivity("สร้างงานใหม่ (มอบหมายทุกคน)", taskTitle);
+      toast(
+        `เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`,
+      );
+    } else {
+      // --- เลือกมอบหมายให้คนใดคนหนึ่ง ---
+      await addDoc(collection(db, "groups", group.id, "tasks"), {
+        ...baseData,
+        assigneeId: assignee,
+        assigneeName: members[assignee] || "",
+        status: "todo",
+        completedBy: [],
+        createdBy: user ? user.uid : "",
+        createdByName: nameOf(),
+        createdAt: serverTimestamp(),
+      });
+      await logActivity("สร้างงานใหม่", taskTitle);
+      toast("เพิ่มงานใหม่ให้กลุ่มแล้ว");
     }
+  }
 
     closeModal("taskModal");
     $("#taskForm").reset();

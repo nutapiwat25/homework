@@ -436,8 +436,8 @@ function filtered() {
     const ok =
       activeFilter === "all" ||
       (activeFilter === "mine" &&
-        (t.assigneeId === user.uid ||
-          !t.assigneeId ||
+        (!t.assigneeId ||
+          t.assigneeId === user.uid ||
           t.assigneeName === "ทุกคน")) ||
       (activeFilter === "week" &&
         daysAway(t.due) >= 0 &&

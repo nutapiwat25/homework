@@ -114,13 +114,15 @@ document.querySelectorAll(".auth-tab").forEach(
       $("#authSubmit").textContent = registerMode
         ? "สร้างบัญชีและเริ่มกลุ่ม"
         : "เข้าสู่ระบบ";
-      
+
       // ล้างข้อความและรีเซ็ตสีแจ้งเตือน
       $("#authError").textContent = "";
       $("#authError").style.color = "#f06f68";
-      
+
       // ซ่อนปุ่มลืมรหัสผ่านเมื่ออยู่ในหน้าสมัครสมาชิก
-      $("#forgotPasswordBtn").style.display = registerMode ? "none" : "inline-block";
+      $("#forgotPasswordBtn").style.display = registerMode
+        ? "none"
+        : "inline-block";
     }),
 );
 
@@ -399,7 +401,7 @@ function render() {
 
   // 5. คำนวณงานที่ค้างเฉพาะของ "ผู้ใช้งานปัจจุบัน (User)"
   const myPendingTasks = tasks.filter(
-    (t) => !t.completedBy || !t.completedBy.includes(user?.uid)
+    (t) => !t.completedBy || !t.completedBy.includes(user?.uid),
   ).length;
 
   // 6. คำนวณงานด่วนเฉพาะของ User (ส่งภายใน 3 วัน)
@@ -407,7 +409,7 @@ function render() {
     (t) =>
       (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
       daysAway(t.due) >= 0 &&
-      daysAway(t.due) <= 3
+      daysAway(t.due) <= 3,
   ).length;
 
   // --- แสดงผลบน Dashboard ---
@@ -416,7 +418,7 @@ function render() {
   $("#completedCount").textContent = done;
   $("#progressCount").textContent = `${progressPercent}%`;
   $("#sidebarTaskCount").textContent = myPendingTasks;
-  
+
   $("#motivation").textContent = myPendingTasks
     ? `คุณยังมีงานค้างอยู่อีก ${myPendingTasks} งาน ช่วยกันเคลียร์นะ!`
     : "คุณทำครบทุกงานแล้ว เยี่ยมมาก!";
@@ -433,7 +435,10 @@ function filtered() {
     const isDone = t.completedBy && t.completedBy.length > 0;
     const ok =
       activeFilter === "all" ||
-      (activeFilter === "mine" && (t.assigneeId === user.uid || !t.assigneeId || t.assigneeName === "ทุกคน")) ||
+      (activeFilter === "mine" &&
+        (t.assigneeId === user.uid ||
+          !t.assigneeId ||
+          t.assigneeName === "ทุกคน")) ||
       (activeFilter === "week" &&
         daysAway(t.due) >= 0 &&
         daysAway(t.due) <= 7) ||
@@ -830,7 +835,7 @@ $("#taskForm").onsubmit = async (e) => {
       const data = {
         ...baseData,
         assigneeId: assignee || "",
-        assigneeName: assignee ? (members[assignee] || "") : "ทุกคน",
+        assigneeName: assignee ? members[assignee] || "" : "ทุกคน",
       };
       await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
       await logActivity("แก้ไขงาน", taskTitle);
@@ -854,7 +859,9 @@ $("#taskForm").onsubmit = async (e) => {
         });
         await Promise.all(promises);
         await logActivity("สร้างงานใหม่ (มอบหมายทุกคน)", taskTitle);
-        toast(`เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`);
+        toast(
+          `เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`,
+        );
       } else {
         // --- เลือกมอบหมายให้คนใดคนหนึ่ง ---
         await addDoc(collection(db, "groups", group.id, "tasks"), {
@@ -1097,7 +1104,7 @@ $("#calendarTaskList").onclick = (e) => {
 // ระบบลืมรหัสผ่าน (Reset Password)
 $("#forgotPasswordBtn").onclick = async () => {
   const email = $("#email").value.trim();
-  
+
   if (!email) {
     $("#authError").textContent = "กรุณากรอกอีเมลก่อนกดลืมรหัสผ่าน";
     $("#email").focus();
@@ -1107,7 +1114,8 @@ $("#forgotPasswordBtn").onclick = async () => {
   try {
     await sendPasswordResetEmail(auth, email);
     $("#authError").style.color = "#44ac82"; // เปลี่ยนเป็นสีเขียวแจ้งเตือนความสำเร็จ
-    $("#authError").textContent = "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
+    $("#authError").textContent =
+      "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
   } catch (err) {
     $("#authError").style.color = "#f06f68"; // สีแดงแจ้งเตือน Error
     const errMap = {
@@ -1115,6 +1123,7 @@ $("#forgotPasswordBtn").onclick = async () => {
       "auth/user-not-found": "ไม่พบบัญชีผู้ใช้นี้ในระบบ",
     };
     $("#authError").textContent =
-      errMap[err.code] || "ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่อีกครั้ง";
+      errMap[err.code] ||
+      "ไม่สามารถส่งอีเมลรีเซ็ตรหัสผ่านได้ โปรดลองใหม่อีกครั้ง";
   }
 };

@@ -377,50 +377,27 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  // 1. ดึงข้อมูลสมาชิกทั้งหมดในกลุ่ม
-  const membersObj = (group && group.data && group.data().members) || {};
-  const memberUids = Object.keys(membersObj);
-  const totalMembers = memberUids.length || 1; // กันหารด้วย 0
   const done = tasks.filter(
     (t) => t.completedBy && t.completedBy.length > 0,
   ).length;
-  // 2. งานทั้งหมดแบบนับทุกคนจริงๆ (จำนวนงาน x จำนวนสมาชิก)
-  const totalGroupTasks = tasks.length * totalMembers;
-
-  // 3. นับงานที่สมาชิกทุกคนติ๊กเสร็จแล้วจริงๆ จาก completedBy ของทุก task
-  const totalCompleted = tasks.reduce((sum, t) => {
-    return sum + (t.completedBy ? t.completedBy.length : 0);
-  }, 0);
-
-  // 4. คำนวณเปอร์เซ็นต์ความคืบหน้า
-  const progressPercent = totalGroupTasks
-    ? Math.round((totalCompleted / totalGroupTasks) * 100)
-    : 0;
-
-  // 5. คำนวณงานที่ค้างเฉพาะของ "ผู้ใช้งานปัจจุบัน (User)"
-  const myPendingTasks = tasks.filter(
-    (t) => !t.completedBy || !t.completedBy.includes(user?.uid)
-  ).length;
-
-  // 6. คำนวณงานด่วนเฉพาะของ User (ส่งภายใน 3 วัน)
   const urgent = tasks.filter(
     (t) =>
       (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
       daysAway(t.due) >= 0 &&
-      daysAway(t.due) <= 3
+      daysAway(t.due) <= 3,
   ).length;
+  const pending = tasks.length - done;
 
-  // --- แสดงผลบน Dashboard ---
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
   $("#completedCount").textContent = done;
-  $("#progressCount").textContent = `${progressPercent}%`;
-  $("#sidebarTaskCount").textContent = myPendingTasks;
-  
-  $("#motivation").textContent = myPendingTasks
-    ? `คุณยังมีงานค้างอยู่อีก ${myPendingTasks} งาน ช่วยกันเคลียร์นะ!`
-    : "คุณทำครบทุกงานแล้ว เยี่ยมมาก!";
-
+  $("#progressCount").textContent = tasks.length
+    ? `${Math.round((done / tasks.length) * 100)}%`
+    : "0%";
+  $("#sidebarTaskCount").textContent = pending;
+  $("#motivation").textContent = pending
+    ? `ยังมี ${pending} งานที่กลุ่มช่วยกันจัดการได้`
+    : "เคลียร์ทุกงานแล้ว เยี่ยมมากทั้งกลุ่ม!";
   renderTasks();
   renderDue();
   renderActivity();

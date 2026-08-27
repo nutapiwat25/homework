@@ -802,92 +802,70 @@ initTheme();
 
 $("#taskForm").onsubmit = async (e) => {
   e.preventDefault();
+  
+  // 1. ป้องกันการกดปุ่มส่งฟอร์มซ้ำขณะกำลังประมวลผล
   const submitBtn = e.target.querySelector('button[type="submit"]');
-  submitBtn.disabled = true;
-  submitBtn.textContent = "กำลังบันทึก...";
+  if (submitBtn) submitBtn.disabled = true;
 
   try {
-    if (!group || !group.id) throw new Error("ไม่พบข้อมูลกลุ่ม");
-
-    const id = $("#taskId").value,
-      assignee = $("#taskAssignee").value,
-      members = (group.data && group.data().members) || {};
-
     const taskTitle = $("#taskTitle").value.trim();
+    const subject = $("#taskSubject").value.trim();
+    const due = $("#taskDue").value;
+    const assignee = $("#taskAssignee").value;
+    const note = $("#taskNote").value.trim();
+
+    if (!taskTitle) {
+      toast("กรุณากรอกชื่อรายการงาน");
+      return;
+    }
+
     const baseData = {
       title: taskTitle,
-      subject: $("#taskSubject").value.trim(),
-      section: $("#taskSection")
-        ? $("#taskSection").value.trim()
-        : "section650001",
-      due: $("#taskDue").value,
-      priority: $("#taskPriority").value,
-      link: $("#taskLink") ? $("#taskLink").value.trim() : "",
-      platform: $("#taskPlatform").value,
-      score: $("#taskScore").value !== "" ? Number($("#taskScore").value) : 0,
-      note: $("#taskNote").value.trim(),
+      subject: subject || "ทั่วไป",
+      due: due || "",
+      note: note || "",
       updatedAt: serverTimestamp(),
-      updatedByName: nameOf(),
     };
 
-    if (id) {
-      // กรณีแก้ไขงานเดิม
-      const data = {
+    if (editingTaskId) {
+      // --- กรณีแก้ไขงานเดิม ---
+      const taskRef = doc(db, "groups", group.id, "tasks", editingTaskId);
+      await updateDoc(taskRef, {
         ...baseData,
         assigneeId: assignee || "",
-        assigneeName: assignee ? members[assignee] || "" : "ทุกคน",
-      };
-      await updateDoc(doc(db, "groups", group.id, "tasks", id), data);
-      await logActivity("แก้ไขงาน", taskTitle);
-      toast("อัปเดตงานแล้ว");
-    } else {
-    if (!assignee) {
-      // --- เลือก "ทุกคน" : ระบบจะวนลูปแจกงานให้สมาชิกทุกคนในกลุ่ม ---
-      const memberEntries = Object.entries(members);
-      const promises = memberEntries.map(([mUid, mName]) => {
-        return addDoc(collection(db, "groups", group.id, "tasks"), {
-          ...baseData,
-          assigneeId: mUid,
-          assigneeName: mName,
-          status: "todo",
-          completedBy: [],
-          createdBy: user ? user.uid : "",
-          createdByName: nameOf(),
-          createdAt: serverTimestamp(),
-        });
+        assigneeName: assignee ? (members[assignee] || "") : "ทุกคน",
       });
-      await Promise.all(promises);
-      await logActivity("สร้างงานใหม่ (มอบหมายทุกคน)", taskTitle);
-      toast(
-        `เพิ่มงานให้สมาชิกทุกคน (${memberEntries.length} คน) เรียบร้อยแล้ว`,
-      );
+      await logActivity("แก้ไขงาน", taskTitle);
+      toast("แก้ไขงานเรียบร้อยแล้ว");
     } else {
-      // --- เลือกมอบหมายให้คนใดคนหนึ่ง ---
+      // --- 2. กรณีสร้างงานใหม่ (สร้าง 1 Document เดียวเสมอ!) ---
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...baseData,
-        assigneeId: assignee,
-        assigneeName: members[assignee] || "",
+        assigneeId: assignee || "",
+        assigneeName: assignee ? (members[assignee] || "") : "ทุกคน",
         status: "todo",
         completedBy: [],
         createdBy: user ? user.uid : "",
         createdByName: nameOf(),
         createdAt: serverTimestamp(),
       });
-      await logActivity("สร้างงานใหม่", taskTitle);
-      toast("เพิ่มงานใหม่ให้กลุ่มแล้ว");
+      
+      await logActivity(
+        assignee ? "สร้างงานใหม่" : "สร้างงานใหม่ (สำหรับทุกคน)", 
+        taskTitle
+      );
+      toast("เพิ่มงานใหม่เรียบร้อยแล้ว");
     }
-  }
 
-    closeModal("taskModal");
-    $("#taskForm").reset();
-  } catch (err) {
-    console.error("Task Form Error:", err);
-    alert(
-      "เกิดข้อผิดพลาดในการบันทึก: " + (err.message || "กรุณาลองใหม่อีกครั้ง"),
-    );
+    closeModal();
+    // reload / render tasks...
+    
+  } catch (error) {
+    console.error("Error saving task:", error);
+    toast("เกิดข้อผิดพลาดในการบันทึกงาน");
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "บันทึกงาน";
+    // ปลดล็อกปุ่มส่งฟอร์ม
+    if (submitBtn) submitBtn.disabled = false;
   }
 };
 

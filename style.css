@@ -55,11 +55,9 @@ body {
   display: flex;
 }
 
-/* Sidebar & Navigation */
-/* Sidebar & Navigation */
 .sidebar {
   width: 244px;
-  height: 100dvh; /* เปลี่ยนจาก 100vh เป็น 100dvh เพื่อรองรับ Address Bar ของ iPad/ Safari */
+  height: 100dvh; 
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 30;
@@ -68,8 +66,8 @@ body {
   display: flex;
   flex-direction: column;
   padding: 20px 16px;
-  overflow-y: auto; /* เพิ่มบรรทัดนี้: อนุญาตให้เลื่อน Scroll ลงได้เมื่อจอเตี้ยเกินไป */
-  -webkit-overflow-scrolling: touch; /* ปรับให้ Scroll ได้ลื่นบน iOS/iPadOS */
+  overflow-y: auto; 
+  -webkit-overflow-scrolling: touch; 
   transition: transform 0.25s ease-in-out;
 }
 
@@ -159,7 +157,7 @@ body {
 .sidebar-nav {
   display: grid;
   gap: 7px;
-  flex-shrink: 0; /* ป้องกันไม่ให้เมนูกดทับ/หดตัวเกินไป */
+  flex-shrink: 0; 
 }
 
 .nav-item {
@@ -206,12 +204,12 @@ body {
 }
 
 .sidebar-footer {
-  margin-top: auto; /* ดันลงมาล่างสุดเสมอ */
-  flex-shrink: 0; /* เพิ่มบรรทัดนี้: ป้องกันไม่ให้ส่วนล่างโดนบีบจนมองไม่เห็น */
+  margin-top: auto; 
+  flex-shrink: 0; 
   padding-bottom: max(
     16px,
     env(safe-area-inset-bottom)
-  ); /* รองรับขอบล่างของ iPad */
+  ); 
 }
 
 .member-preview {
@@ -309,7 +307,6 @@ body {
   color: #9895ad;
 }
 
-/* Sidebar Mobile Overlay */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -326,7 +323,6 @@ body {
   pointer-events: auto;
 }
 
-/* Main Content & Topbar */
 .main-content {
   margin-left: 244px;
   min-width: 0;
@@ -425,7 +421,6 @@ body.dark .topbar {
   display: none;
 }
 
-/* Pages & Cards */
 .page {
   max-width: 1390px;
   margin: 0 auto;
@@ -467,7 +462,6 @@ body.dark .topbar {
   font-size: 13px;
 }
 
-/* Buttons */
 .primary-button,
 .secondary-button {
   border: 0;
@@ -512,7 +506,6 @@ body.dark .topbar {
   background: var(--surface-soft);
 }
 
-/* Stats */
 .stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -581,7 +574,6 @@ body.dark .topbar {
   color: var(--text-muted);
 }
 
-/* Card Surface & Task List */
 .card-surface {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -866,7 +858,6 @@ body.dark .topbar {
   padding: 8px 0;
 }
 
-/* Workspace Layout */
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.64fr) minmax(260px, 0.73fr);
@@ -1001,7 +992,6 @@ body.dark .topbar {
   color: #a855f7;
 }
 
-/* Modals */
 .modal-backdrop {
   opacity: 0;
   pointer-events: none;
@@ -1160,7 +1150,6 @@ body.dark .topbar {
   margin: 4px 0 0;
 }
 
-/* Toast */
 .toast {
   position: fixed;
   z-index: 70;
@@ -1203,7 +1192,6 @@ body.dark .toast {
   margin: 0;
 }
 
-/* Calendar */
 .calendar-card-full {
   padding: 24px;
 }
@@ -1309,7 +1297,6 @@ body.dark .toast {
   flex-wrap: wrap;
 }
 
-/* Auth Screen */
 .auth-screen {
   min-height: 100vh;
   display: grid;
@@ -1318,7 +1305,6 @@ body.dark .toast {
   background: var(--bg);
 }
 
-/* ปรับสไตล์ Label และ ช่อง Input หน้า Auth */
 .auth-card label {
   display: flex;
   flex-direction: column;
@@ -1331,10 +1317,10 @@ body.dark .toast {
 
 .auth-card input {
   width: 100%;
-  height: 44px; /* ปรับความสูงให้ได้มาตรฐานกดง่าย */
+  height: 44px; 
   padding: 0 14px;
   border: 1.5px solid var(--line);
-  border-radius: 12px; /* เพิ่มความโค้งมนให้เข้ากับกล่องใหญ่ */
+  border-radius: 12px; 
   background-color: var(--input-bg);
   color: var(--text);
   font-family: inherit;
@@ -1344,19 +1330,16 @@ body.dark .toast {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* เอฟเฟกต์เมื่อ Hover */
 .auth-card input:hover {
   border-color: #b6acff;
 }
 
-/* เอฟเฟกต์เมื่อ Focus (คลิก พิมพ์) */
 .auth-card input:focus {
   border-color: var(--primary);
   background-color: var(--surface);
-  box-shadow: 0 0 0 4px rgba(102, 88, 232, 0.15); /* แสงฟุ้งสีม่วงรอบกล่อง */
+  box-shadow: 0 0 0 4px rgba(102, 88, 232, 0.15); 
 }
 
-/* ปรับแต่ง Placeholder */
 .auth-card input::placeholder {
   color: var(--text-muted);
   font-weight: 400;
@@ -1431,7 +1414,6 @@ body.dark .toast {
   margin-top: 16px;
 }
 
-/* Details & Comments */
 .detail-head h2 {
   font-size: 18px;
   line-height: 1.35;
@@ -1495,7 +1477,6 @@ body.dark .toast {
   margin-top: 12px;
 }
 
-/* Responsive Design */
 @media (max-width: 1080px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
@@ -1539,7 +1520,6 @@ body.dark .toast {
     display: none;
   }
 
-  /* 3. ปรับระยะห่างปุ่มฝั่งขวา */
   .topbar-actions {
     gap: 6px;
     flex-shrink: 0;
@@ -1547,7 +1527,6 @@ body.dark .toast {
     align-items: center;
   }
 
-  /* 4. ปรับขนาดปุ่มบนมือถือให้เล็กลง และซ่อนตัวหนังสือบางปุ่ม */
   .invite-button {
     padding: 5px 8px;
     font-size: 10.5px;
@@ -1556,7 +1535,7 @@ body.dark .toast {
   }
 
   .invite-button span {
-    display: inline-block; /* มั่นใจว่าตัวหนังสือยังแสดงผลอยู่ */
+    display: inline-block; 
   }
 
   .icon-button {
@@ -1645,8 +1624,7 @@ body.dark .toast {
     font-size: 10px;
   }
 }
-/* Custom Tooltip แบบ Google Style สำหรับรูปสมาชิก */
-/* ตกแต่งส่วน Avatar Stack ให้แสดงซ้อนกัน */
+
 .avatar-stack {
   display: flex;
   align-items: center;
@@ -1675,7 +1653,6 @@ body.dark .toast {
   flex-shrink: 0;
 }
 
-/* ดึงรูปถัดไปให้ซ้อนทับรูปก่อนหน้า */
 .avatar-stack > * + * {
   margin-left: -10px;
 }
@@ -1686,11 +1663,10 @@ body.dark .toast {
   z-index: 10;
 }
 
-/* กล่อง ข้อความชื่อเมื่อ Hover */
 .avatar-tooltip::after {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 125%; /* ลอยอยู่เหนือ Avatar */
+  bottom: 125%; 
   left: 50%;
   transform: translateX(-50%) scale(0.8);
   background: rgba(23, 22, 37, 0.92);
@@ -1711,7 +1687,6 @@ body.dark .toast {
   z-index: 100;
 }
 
-/* สร้อย/ลูกศรชี้ลงของ Tooltip */
 .avatar-tooltip::before {
   content: "";
   position: absolute;
@@ -1730,7 +1705,6 @@ body.dark .toast {
   z-index: 100;
 }
 
-/* เมื่อเอาเมาส์ไปชี้ (Hover) ให้แสดง Tooltip */
 .avatar-tooltip:hover::after {
   opacity: 1;
   visibility: visible;

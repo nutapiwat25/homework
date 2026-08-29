@@ -115,11 +115,9 @@ document.querySelectorAll(".auth-tab").forEach(
         ? "สร้างบัญชีและเริ่มกลุ่ม"
         : "เข้าสู่ระบบ";
 
-      // ล้างข้อความและรีเซ็ตสีแจ้งเตือน
       $("#authError").textContent = "";
       $("#authError").style.color = "#f06f68";
 
-      // ซ่อนปุ่มลืมรหัสผ่านเมื่ออยู่ในหน้าสมัครสมาชิก
       $("#forgotPasswordBtn").style.display = registerMode
         ? "none"
         : "inline-block";
@@ -228,7 +226,6 @@ function renderGroup() {
   $("#inviteCode").textContent = data.inviteCode;
   const members = Object.entries(data.members || {});
 
-  // ปรับปรุงตรงนี้: เพิ่ม data-tooltip และ class เพื่อทำ Tooltip สไตล์ Google
   $("#memberAvatars").innerHTML =
     members
       .slice(0, 5)
@@ -379,32 +376,26 @@ function renderActivity(activities = currentActivities) {
 }
 
 function render() {
-  // 1. ดึงข้อมูลสมาชิกทั้งหมดในกลุ่ม
   const membersObj = (group && group.data && group.data().members) || {};
   const memberUids = Object.keys(membersObj);
-  const totalMembers = memberUids.length || 1; // กันหารด้วย 0
+  const totalMembers = memberUids.length || 1; 
   const done = tasks.filter(
     (t) => t.completedBy && t.completedBy.length > 0,
   ).length;
-  // 2. งานทั้งหมดแบบนับทุกคนจริงๆ (จำนวนงาน x จำนวนสมาชิก)
   const totalGroupTasks = tasks.length * totalMembers;
 
-  // 3. นับงานที่สมาชิกทุกคนติ๊กเสร็จแล้วจริงๆ จาก completedBy ของทุก task
   const totalCompleted = tasks.reduce((sum, t) => {
     return sum + (t.completedBy ? t.completedBy.length : 0);
   }, 0);
 
-  // 4. คำนวณเปอร์เซ็นต์ความคืบหน้า
   const progressPercent = totalGroupTasks
     ? Math.round((totalCompleted / totalGroupTasks) * 100)
     : 0;
 
-  // 5. คำนวณงานที่ค้างเฉพาะของ "ผู้ใช้งานปัจจุบัน (User)"
   const myPendingTasks = tasks.filter(
     (t) => !t.completedBy || !t.completedBy.includes(user?.uid),
   ).length;
 
-  // 6. คำนวณงานด่วนเฉพาะของ User (ส่งภายใน 3 วัน)
   const urgent = tasks.filter(
     (t) =>
       (!t.completedBy || !t.completedBy.includes(user?.uid)) &&
@@ -412,7 +403,6 @@ function render() {
       daysAway(t.due) <= 3,
   ).length;
 
-  // --- แสดงผลบน Dashboard ---
   $("#totalCount").textContent = tasks.length;
   $("#urgentCount").textContent = urgent;
   $("#completedCount").textContent = done;
@@ -480,7 +470,6 @@ function renderTasks() {
           const isMyView = activeFilter === "mine";
           const isDoneByMe = completedUids.includes(user?.uid);
 
-          // แท็กแสดงคะแนนและแพลตฟอร์ม
           const platformPill = t.platform
             ? `<span class="subject-pill" style="background: rgba(102, 88, 232, 0.1); color: var(--primary);">📤 ${esc(t.platform)}</span>`
             : "";
@@ -699,7 +688,6 @@ async function showDetail(id) {
 
   const isDoneByMe = (t.completedBy || []).includes(user?.uid);
 
-  // เพิ่มส่วนแสดงผล คะแนน และ ช่องทางการส่งงาน
   const scoreHtml =
     t.score !== undefined && t.score !== ""
       ? `<p class="detail-score"><b>💯 คะแนน:</b> ${t.score} คะแนน</p>`
@@ -831,7 +819,6 @@ $("#taskForm").onsubmit = async (e) => {
     };
 
     if (id) {
-      // กรณีแก้ไขงานเดิม
       const data = {
         ...baseData,
         assigneeId: assignee || "",
@@ -841,7 +828,6 @@ $("#taskForm").onsubmit = async (e) => {
       await logActivity("แก้ไขงาน", taskTitle);
       toast("อัปเดตงานแล้ว");
     } else {
-      // กรณีสร้างงานใหม่ (สร้างเพียง 1 งานเสมอ ไม่ว่าจะเลือกเฉพาะคนหรือทุกคน)
       await addDoc(collection(db, "groups", group.id, "tasks"), {
         ...baseData,
         assigneeId: assignee || "",
@@ -1027,7 +1013,6 @@ document.querySelectorAll(".nav-item").forEach(
 
 $("#logoutButton").onclick = () => signOut(auth);
 
-// ของใหม่ (แสดงชื่อสมาชิกทั้งหมดใน Toast)
 $("#openMembers").onclick = () => {
   const membersObj = group?.data()?.members || {};
   const names = Object.values(membersObj).join(", ");
@@ -1082,7 +1067,6 @@ $("#calendarTaskList").onclick = (e) => {
   if (b.dataset.action === "detail") showDetail(id);
 };
 
-// ระบบลืมรหัสผ่าน (Reset Password)
 $("#forgotPasswordBtn").onclick = async () => {
   const email = $("#email").value.trim();
 
@@ -1094,11 +1078,11 @@ $("#forgotPasswordBtn").onclick = async () => {
 
   try {
     await sendPasswordResetEmail(auth, email);
-    $("#authError").style.color = "#44ac82"; // เปลี่ยนเป็นสีเขียวแจ้งเตือนความสำเร็จ
+    $("#authError").style.color = "#44ac82"; 
     $("#authError").textContent =
       "ส่งลิงก์ตั้งรหัสผ่านใหม่ไปยังอีเมลของคุณแล้ว";
   } catch (err) {
-    $("#authError").style.color = "#f06f68"; // สีแดงแจ้งเตือน Error
+    $("#authError").style.color = "#f06f68"; 
     const errMap = {
       "auth/invalid-email": "รูปแบบอีเมลไม่ถูกต้อง",
       "auth/user-not-found": "ไม่พบบัญชีผู้ใช้นี้ในระบบ",

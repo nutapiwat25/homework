@@ -269,6 +269,7 @@ function subscribeTasks() {
     (snap) => {
       tasks = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
       render();
+      checkUpcomingTasks();
     },
   );
   subscribeActivities();
@@ -675,6 +676,21 @@ function openTask(id) {
     $("#taskScore").value = "";
   }
   openModal("taskModal");
+}
+
+function checkUpcomingTasks() {
+  if (!tasks || !tasks.length || !user) return;
+
+  const urgentTasks = tasks.filter((t) => {
+    const isDoneByMe = t.completedBy && t.completedBy.includes(user.uid);
+    const daysLeft = daysAway(t.due);
+    return !isDoneByMe && daysLeft >= 0 && daysLeft <= 1; 
+  });
+
+  if (urgentTasks.length > 0) {
+    const taskNames = urgentTasks.map((t) => t.title).join(", ");
+    toast(`⚠️ มีงานใกล้ส่ง ${urgentTasks.length} รายการ: ${taskNames}`);
+  }
 }
 
 async function showDetail(id) {

@@ -68,20 +68,36 @@ let user,
   selectedCalDate = null,
   registerMode = false;
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const nameOf = () =>
   user?.displayName || user?.email?.split("@")[0] || "เพื่อน";
 const initials = (n) => (n || "?").trim().slice(0, 1).toUpperCase();
 const code = () => Math.random().toString(36).slice(2, 8).toUpperCase();
-const daysAway = (date) =>
-  Math.round(
-    (new Date(`${date}T12:00`) - new Date(`${today()}T12:00`)) / 864e5,
-  );
-const fmt = (date) =>
-  new Date(`${date}T12:00`).toLocaleDateString("th-TH", {
+
+// คำนวณความต่างของวันโดยแปลงเป็น Date Object ที่ปรับเวลาให้เที่ยงตรงเพื่อป้องกันเรื่องผลกระทบจาก Daylight Saving / Timezone Offset
+const daysAway = (date) => {
+  if (!date) return 0;
+  const target = new Date(date + "T00:00:00");
+  const current = new Date(today() + "T00:00:00");
+  return Math.round((target - current) / (1000 * 60 * 60 * 24));
+};
+
+// แสดงผลวันที่ในรูปแบบไทย
+const fmt = (date) => {
+  if (!date) return "";
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("th-TH", {
     day: "numeric",
     month: "short",
   });
+};
 
 function toast(text) {
   const t = $("#toast");

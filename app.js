@@ -81,7 +81,6 @@ const nameOf = () =>
 const initials = (n) => (n || "?").trim().slice(0, 1).toUpperCase();
 const code = () => Math.random().toString(36).slice(2, 8).toUpperCase();
 
-// คำนวณความต่างของวันโดยแปลงเป็น Date Object ที่ปรับเวลาให้เที่ยงตรงเพื่อป้องกันเรื่องผลกระทบจาก Daylight Saving / Timezone Offset
 const daysAway = (date) => {
   if (!date) return 0;
   const target = new Date(date + "T00:00:00");
@@ -89,7 +88,6 @@ const daysAway = (date) => {
   return Math.round((target - current) / (1000 * 60 * 60 * 24));
 };
 
-// แสดงผลวันที่ในรูปแบบไทย
 const fmt = (date) => {
   if (!date) return "";
   const [y, m, d] = date.split("-").map(Number);

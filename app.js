@@ -739,11 +739,10 @@ function openTask(id) {
 function checkUpcomingTasks() {
   if (!tasks || !tasks.length || !user) return;
 
-  // กรองเฉพาะงานที่ยังไม่ทำ และเหลือเวลา 0-1 วัน (หรือเปลี่ยนเป็น <= 3 วันตามต้องการ)
   const urgentTasks = tasks.filter((t) => {
     const isDoneByMe = t.completedBy && t.completedBy.includes(user.uid);
     const daysLeft = daysAway(t.due);
-    return !isDoneByMe && daysLeft >= 0 && daysLeft <= 1; 
+    return !isDoneByMe && daysLeft >= 0 && daysLeft <= 3; 
   });
 
   if (urgentTasks.length > 0) {
@@ -762,7 +761,6 @@ function checkUpcomingTasks() {
       `).join("");
     }
     
-    // เปิด Popup ตรงกลางจอ
     openModal("alertModal");
   }
 }

@@ -504,6 +504,31 @@
       <p id="toastText">บันทึกแล้ว</p>
     </div>
 
+    <div class="modal-backdrop" id="alertModal">
+      <section class="task-modal" role="dialog" aria-modal="true" style="max-width: 480px;">
+        <button class="close-modal" data-close="alertModal" aria-label="ปิด">×</button>
+        <div class="modal-title" style="margin-bottom: 12px;">
+          <span class="modal-symbol" style="background: #f06f68;">⚠️</span>
+          <div>
+            <p style="color: #f06f68; font-weight: 700;">แจ้งเตือนงานค้าง</p>
+            <h2>งานที่ต้องส่งเร็วๆ นี้!</h2>
+          </div>
+        </div>
+        <p class="modal-copy" style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          คุณมีงานที่ยังไม่ได้ทำและใกล้ถึงกำหนดส่ง โปรดรีบดำเนินการ:
+        </p>
+        
+        <div id="alertTaskList" class="task-list" style="max-height: 260px; overflow-y: auto; margin-bottom: 20px;">
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="primary-button full" data-close="alertModal">
+            รับทราบ / ดำเนินการต่อ
+          </button>
+        </div>
+      </section>
+    </div>
+
     <script type="module" src="app.js"></script>
   </body>
 </html>

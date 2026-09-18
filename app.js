@@ -739,6 +739,7 @@ function openTask(id) {
 function checkUpcomingTasks() {
   if (!tasks || !tasks.length || !user) return;
 
+  // กรองเฉพาะงานที่ยังไม่ทำ และเหลือเวลา 0-1 วัน (หรือเปลี่ยนเป็น <= 3 วันตามต้องการ)
   const urgentTasks = tasks.filter((t) => {
     const isDoneByMe = t.completedBy && t.completedBy.includes(user.uid);
     const daysLeft = daysAway(t.due);
@@ -746,8 +747,23 @@ function checkUpcomingTasks() {
   });
 
   if (urgentTasks.length > 0) {
-    const taskNames = urgentTasks.map((t) => t.title).join(", ");
-    toast(`⚠️ มีงานใกล้ส่ง ${urgentTasks.length} รายการ: ${taskNames}`);
+    const alertListContainer = $("#alertTaskList");
+    if (alertListContainer) {
+      alertListContainer.innerHTML = urgentTasks.map((t) => `
+        <div class="task-item" style="border-left: 4px solid #f06f68;">
+          <div class="task-open" onclick="showDetail('${t.id}'); closeModal('alertModal');">
+            <span class="task-title" style="font-size: 14px;">${esc(t.title)}</span>
+            <span class="task-meta">
+              <span class="subject-pill subject-cs">${esc(t.subject)}</span>
+              <span class="due-date" style="color: #f06f68; font-weight: bold;">◷ ${due(t)}</span>
+            </span>
+          </div>
+        </div>
+      `).join("");
+    }
+    
+    // เปิด Popup ตรงกลางจอ
+    openModal("alertModal");
   }
 }
 

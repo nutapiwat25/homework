@@ -193,20 +193,64 @@ onAuthStateChanged(auth, async (u) => {
 
 async function loadGroups() {
   if (stopGroups) stopGroups();
+
+  const preferredGroupId = localStorage.getItem("homie-group");
+
+  if (preferredGroupId) {
+    try {
+      const groupDocRef = doc(db, "groups", preferredGroupId);
+      const groupDocSnap = await getDoc(groupDocRef);
+
+      if (groupDocSnap.exists()) {
+        const groupData = groupDocSnap.data();
+        if (groupData.memberIds && groupData.memberIds.includes(user.uid)) {
+          group = groupDocSnap;
+          renderGroup();
+          subscribeTasks();
+          
+          stopGroups = onSnapshot(groupDocRef, (docSnap) => {
+            if (docSnap.exists()) {
+              group = docSnap;
+              renderGroup();
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("ไม่สามารถดึงข้อมูลกลุ่มเดิมได้:", err);
+    }
+  }
+
   const q = query(
     collection(db, "groups"),
-    where("memberIds", "array-contains", user.uid),
+    where("memberIds", "array-contains", user.uid)
   );
+
   stopGroups = onSnapshot(q, async (snap) => {
-    if (snap.empty) {
-      await createGroup();
-      return;
+    let matchedGroup = null;
+
+    for (const docSnap of snap.docs) {
+      const data = docSnap.data();
+      if (data.memberIds && Array.isArray(data.memberIds)) {
+        for (const memberId of data.memberIds) {
+          if (memberId === user.uid) {
+            matchedGroup = docSnap;
+            break;
+          }
+        }
+      }
+      if (matchedGroup) break;
     }
-    const preferred = localStorage.getItem("homie-group");
-    group = snap.docs.find((d) => d.id === preferred) || snap.docs[0];
-    localStorage.setItem("homie-group", group.id);
-    renderGroup();
-    subscribeTasks();
+
+    if (matchedGroup) {
+      group = matchedGroup;
+      localStorage.setItem("homie-group", group.id);
+      renderGroup();
+      subscribeTasks();
+    } else if (snap.empty) {
+      console.log("ไม่พบกลุ่มในระบบ กำลังสร้างกลุ่มใหม่...");
+      await createGroup();
+    }
   });
 }
 

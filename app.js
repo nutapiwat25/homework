@@ -742,7 +742,7 @@ function checkUpcomingTasks() {
   const urgentTasks = tasks.filter((t) => {
     const isDoneByMe = t.completedBy && t.completedBy.includes(user.uid);
     const daysLeft = daysAway(t.due);
-    return !isDoneByMe && daysLeft >= 0 && daysLeft <= 3; 
+    return !isDoneByMe && daysLeft >= 0 && daysLeft <= 3 && daysLeft == 5 && daysLeft == 7; 
   });
 
   if (urgentTasks.length > 0) {
